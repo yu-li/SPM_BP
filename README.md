@@ -19,6 +19,6 @@ Project Website: [Efficient Inference for Continuous MRFs]
 - Fast Global Image Smoothing (FGS), (modified and included) [https://sites.google.com/site/globalsmoothing/]
 
 ## License
-Copyright (c) 2014, Yu Li All rights reserved.
+Copyright (c) 2014, (Yu Li)[http://yu-li.github.io/] All rights reserved.
 
 For research and education purpose only. 
