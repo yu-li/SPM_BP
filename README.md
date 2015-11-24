@@ -14,11 +14,11 @@ Project Website: [Efficient Inference for Continuous MRFs]
 - We will be happy if you cite us when using this code!
 
 ## Dependency
-- OpenCV 3.0 [http://opencv.org/opencv-3-0.html]
-- SLIC superpixel, (included), [http://ivrg.epfl.ch/research/superpixels]
-- Fast Global Image Smoothing (FGS), (modified and included) [https://sites.google.com/site/globalsmoothing/]
+- [OpenCV 3.0](http://opencv.org/opencv-3-0.html)
+- [SLIC superpixel](http://ivrg.epfl.ch/research/superpixels), (included)
+- [Fast Global Image Smoothing (FGS)](https://sites.google.com/site/globalsmoothing/), (modified and included) 
 
 ## License
-Copyright (c) 2014, (Yu Li)[http://yu-li.github.io/] All rights reserved.
+Copyright (c) 2014, [Yu Li](http://yu-li.github.io/) All rights reserved.
 
 For research and education purpose only. 
