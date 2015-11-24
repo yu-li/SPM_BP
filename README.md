@@ -3,7 +3,7 @@ SPM-BP
 
 This is an implementation of the SPM-BP Optical Flow Estimator that correspondes to our published paper:
 
-Y. Li, D. Min, M. S. Brown, M. N. Do, J. Lu. **"SPM-BP: Sped-up PatchMatch Belief Propagation for Continuous MRFs"**. *in ICCV 2015*. 
+Y. Li, D. Min, M. S. Brown, M. N. Do, J. Lu. **"SPM-BP: Sped-up PatchMatch Belief Propagation for Continuous MRFs"**. in *ICCV 2015*. 
 
 Project Website: [Efficient Inference for Continuous MRFs]
 (https://publish.illinois.edu/visual-modeling-and-analytics/efficient-inference-for-continuous-mrfs/)
@@ -19,6 +19,6 @@ Project Website: [Efficient Inference for Continuous MRFs]
 - [Fast Global Image Smoothing (FGS)](https://sites.google.com/site/globalsmoothing/) (modified and included) 
 
 ## License
-Copyright (c) 2014, [Yu Li](http://yu-li.github.io/) All rights reserved.
+Copyright (c) 2015, [Yu Li](http://yu-li.github.io/) All rights reserved.
 
 For research and education purpose only. 
