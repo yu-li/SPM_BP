@@ -9,14 +9,14 @@ Project Website: [Efficient Inference for Continuous MRFs]
 (https://publish.illinois.edu/visual-modeling-and-analytics/efficient-inference-for-continuous-mrfs/)
 
 ## Usage
-- The whole codes are in the `code` folder. You can use CMake to compile SPM-BP (Tested only in Windows 7 with Visual Studio 2012; but the code should be able to run in Linux or Mac with slight modification)
+- The whole codes are in the `code` folder. You can use CMake to compile SPM-BP (Tested only in Windows 7 with Visual Studio 2012; but the code should be able to run in Linux or Mac with slight modification).
 - For windows user, a compiled execuable with demo usage is provided in `Release` folder.
 - We will be happy if you cite us when using this code!
 
 ## Dependency
 - [OpenCV 3.0](http://opencv.org/opencv-3-0.html)
-- [SLIC superpixel](http://ivrg.epfl.ch/research/superpixels), (included)
-- [Fast Global Image Smoothing (FGS)](https://sites.google.com/site/globalsmoothing/), (modified and included) 
+- [SLIC superpixel](http://ivrg.epfl.ch/research/superpixels) (included)
+- [Fast Global Image Smoothing (FGS)](https://sites.google.com/site/globalsmoothing/) (modified and included) 
 
 ## License
 Copyright (c) 2014, [Yu Li](http://yu-li.github.io/) All rights reserved.
