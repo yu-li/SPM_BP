@@ -3,7 +3,7 @@ SPM-BP - ICCV 2015
 
 This is an implementation of the SPM-BP Optical Flow Estimator that correspondes to our paper published in ICCV 2015 
 
-SPM-BP: Sped-up PatchMatch Belief Propagation for Continuous MRFs.
+"SPM-BP: Sped-up PatchMatch Belief Propagation for Continuous MRFs". Y. Li, D. Min, M. S. Brown, M. N. Do, J. Lu
 
 Project Website: 
 [https://publish.illinois.edu/visual-modeling-and-analytics/efficient-inference-for-continuous-mrfs/]
