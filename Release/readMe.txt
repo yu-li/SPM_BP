@@ -1,0 +1,1 @@
+If you encounter problem runing spmbpOF.exe, please try right click->Properties->compatiablity->tick "Run this program in compatiablity mode for [Window 7]".  
