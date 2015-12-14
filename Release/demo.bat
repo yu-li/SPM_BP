@@ -1,1 +1,1 @@
-spmbpOF.exe frame_0017.png frame_0018.png flow
+spmbpOF.exe frame_0017.png frame_0018.png flow -verbose
