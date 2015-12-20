@@ -21,7 +21,7 @@ class opticalFlow
 	void occMatpEst( Mat_<Vec2f> &flow12, Mat_<Vec2f> &flow21, Mat_<uchar>&occMap);
 	void opticalFlowRefine(Mat_<Vec2f> &flow12, Mat_<uchar> &occMap,const Mat_<Vec3b> &weightColorImg, Mat_<Vec2f> &flow_refined);
 	void BFsmoothing( const cv::Mat_<cv::Vec2f> &flowVec, const cv::Mat_<cv::Vec3b> &weightColorImg, int radius, cv::Mat_<cv::Vec2f> &refinedFlow );
-	void runFLowEstimator(const char* i1file, const char* i2file, const char* seqName, spm_bp_params* params);
+	void runFlowEstimator(const char* i1file, const char* i2file, const char* seqName, spm_bp_params* params);
 
 	cv::Mat_<cv::Vec3b> currentFlowColorLeft;
 	cv::Mat_<cv::Vec3b> currentFlowColorRight;

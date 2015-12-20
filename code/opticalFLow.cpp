@@ -15,7 +15,7 @@ opticalFlow::~opticalFlow(void){
 	flow_refined.release();
 }
 
-void opticalFlow::runFLowEstimator(const char* i1file, const char* i2file, const char* seqName, spm_bp_params* params)
+void opticalFlow::runFlowEstimator(const char* i1file, const char* i2file, const char* seqName, spm_bp_params* params)
 {
 	Mat in1 = imread(i1file);
 	Mat in2 = imread(i2file);

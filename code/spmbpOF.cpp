@@ -21,7 +21,7 @@ using namespace std;
 void help(){
     printf("USAGE: spm-bp image1 image2 outputfile [options]\n");
 	printf("\n");
-    printf("Estimate optical flow field between two iamges with SPM_BP and store it into a .flo file\n");
+    printf("Estimate optical flow field between two images with SPM_BP and store it into a .flo file\n");
     printf("\n");
     printf("options:\n"); 
     printf("spm-bp parameters\n");
@@ -32,15 +32,17 @@ void help(){
 	printf(" -kn_size	<int>(9)	filter kerbel radius\n");
 	printf(" -kn_tau	<int>(25)	filter smootheness\n");
 	printf(" -lambda	<float>(2)	pairwise smoothness\n");
+	printf(" -verbose	    		display intermediate result\n");
     printf("\n");
 }
 
 int main(int argc, char **argv){
 	if(argc<4)	{help(); exit(1);}
 
-	// read filenames
+	// input filenames
 	const char *frame1file = argv[1];
 	const char *frame2file = argv[2];
+	// output filenames
 	const char *outputfile = argv[3];
 	
 	spm_bp_params params;
@@ -72,6 +74,7 @@ int main(int argc, char **argv){
             exit(1);
         }
 	}
+	// optical flow estimation 
 	opticalFlow of_est;
-	of_est.runFLowEstimator(frame1file, frame2file, outputfile, &params);
+	of_est.runFlowEstimator(frame1file, frame2file, outputfile, &params);
 }
