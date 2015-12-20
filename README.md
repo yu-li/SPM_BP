@@ -15,8 +15,17 @@ Project Website: [Efficient Inference for Continuous MRFs]
 
 ## Dependency
 - [OpenCV 3.0](http://opencv.org/opencv-3-0.html)
-- [SLIC superpixel](http://ivrg.epfl.ch/research/superpixels) (included)
-- [Fast Global Image Smoothing (FGS)](https://sites.google.com/site/globalsmoothing/) (modified and included) 
+- [SLIC superpixel [1]](http://ivrg.epfl.ch/research/superpixels) (included)
+- [Cross-based Local Multipoint Filtering (CLMF) [2]]
+(https://sites.google.com/site/filteringtutorial/) (included)
+- [Fast Global Image Smoothing (FGS) [3]](https://sites.google.com/site/globalsmoothing/) (modified and included) 
+
+## References
+[1] R. Achanta , A. Shaji, K. Smith, A. Lucchi,P. Fua, and S. Susstrunk, " SLIC superpixels compared to state-of-the-art superpixel methods,"  IEEE Trans. on Pattern Analysis and Machine Intelligence (TPAMI), 34(11), 2274-2282, 2012.
+
+[2] J. Lu, K. Shi, D. Min, L. Lin, and M. N. Do, "Cross-based local multipoint filtering," in Proc. IEEE Int. Conf. Computer Vision and Pattern Recognition (CVPR), Providence, Rhode Island, 2012.
+
+[3] D. Min, S. Choi, J. Lu, B. Ham, K. Sohn, and M. N. Do, “Fast Global Image Smoothing Based on Weighted Least Squares,” IEEE Trans. on Image Processing (TIP), 23(12), 5638-5653, 2014.
 
 ## License
 Copyright (c) 2015, [Yu Li](http://yu-li.github.io/) All rights reserved.
