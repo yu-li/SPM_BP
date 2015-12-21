@@ -32,15 +32,19 @@ void opticalFlow::runFlowEstimator(const char* i1file, const char* i2file, const
 	flow21.create(height2,width2);
 	occMap.create(height1,width1);
 
+	//optical flow from frame 1 to frame 2
 	opticalFlowEst( im1, im2, flow12, params);
+	//optical flow from frame 2 to frame 1
 	opticalFlowEst( im2, im1, flow21, params);
 	
-	//WriteFlowFile("left.flo",flow12,height1,width1);
+	//left-right consistancy check (occlusion estimation)
 	occMap.create(height1,width1);
 	occMatpEst( flow12, flow21, occMap);
 
+	//post processing (occlusion region filling)
 	opticalFlowRefine(flow12, occMap, im1, flow_refined);
 
+	//write result
 	Mat_<Vec3b> flow_color_t;
 	MotionToColor(flow_refined, flow_color_t, -1);
 	cv::imshow("Flow aft Post-processing",flow_color_t);
@@ -143,73 +147,6 @@ void opticalFlow::opticalFlowRefine(Mat_<Vec2f> &flow_in, Mat_<uchar> &occMap,co
 	divide(flow_out_single[1],occ_fgs,flow_out_single[1]);
 
 	merge(flow_out_single,2,flow_refined);
-}
-
-
-void opticalFlow::BFsmoothing( const cv::Mat_<cv::Vec2f> &flowVec, const cv::Mat_<cv::Vec3b> &weightColorImg, int radius, cv::Mat_<cv::Vec2f> &refinedFlow )
-{
-	int g_refineBFColorSigma = 25;
-	int g_refineBFSpatialSigma = 15;
-	int g_refineBFRadius = 15;
-
-	int height, width, iy, ix;
-	height = weightColorImg.rows;
-	width = weightColorImg.cols;
-
-	int winSize = radius*2+1;
-	cv::Mat_<float> spatialWeight(winSize, winSize);
-	const float sigmaSpatial = g_refineBFSpatialSigma;
-	const int COLOR_DIFF_SIZE = 50*50*10;
-	float colorDiffWeight[COLOR_DIFF_SIZE];	
-	const float sigmaColor = g_refineBFColorSigma;
-
-	for (iy=-radius; iy<=radius; ++iy)
-	{
-		for (ix=-radius; ix<=radius; ++ix)
-		{
-			if (abs(iy)>7 || abs(ix)>7) spatialWeight[iy+radius][ix+radius] = 0.0;
-			else spatialWeight[iy+radius][ix+radius] = exp(-float(iy*iy+ix*ix)/(sigmaSpatial*sigmaSpatial));
-		}
-	}
-
-	for (iy=0; iy<COLOR_DIFF_SIZE; ++iy)
-	{
-		colorDiffWeight[iy] = exp(-float(iy)/(sigmaColor*sigmaColor));
-	}
-
-	refinedFlow.create(height, width);
-	for (iy=0; iy<height; ++iy)
-	{
-		for (ix=0; ix<width; ++ix)
-		{
-			int dy, dx;
-			cv::Vec3i anchorPix = weightColorImg[iy][ix];
-			float normWeight = 0.0;
-			cv::Vec2f weightedFlow(0.0, 0.0);
-			for (dy=-radius; dy<=radius; ++dy)
-			{
-				for (dx=-radius; dx<=radius; ++dx)
-				{
-					int my, mx;
-					my = iy+dy;
-					mx = ix+dx;
-					if (my<0 || my>=height || mx<0 || mx>=width) continue;
-					cv::Vec3i tmpPix = weightColorImg[my][mx];
-					int tmpColorDiff = (anchorPix[0]-tmpPix[0])*(anchorPix[0]-tmpPix[0])
-						+ (anchorPix[1]-tmpPix[1])*(anchorPix[1]-tmpPix[1])
-						+ (anchorPix[2]-tmpPix[2])*(anchorPix[2]-tmpPix[2]);
-					(tmpColorDiff >= COLOR_DIFF_SIZE)? tmpColorDiff = COLOR_DIFF_SIZE-1: NULL;
-					float totalWeight = spatialWeight[dy+radius][dx+radius] * colorDiffWeight[tmpColorDiff];
-					
-					weightedFlow += flowVec[my][mx]*totalWeight;
-					normWeight += totalWeight;		
-					
-				}
-			}
-			refinedFlow[iy][ix][0] = weightedFlow[0]/normWeight;
-			refinedFlow[iy][ix][1] = weightedFlow[1]/normWeight;
-		}
-	}
 }
 
 void opticalFlow::ReadFlowFile( const char *flowFile, cv::Mat_<cv::Vec2f> &flowVec, int height, int width )

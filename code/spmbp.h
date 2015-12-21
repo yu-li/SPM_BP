@@ -36,8 +36,6 @@ using std::endl;
 #define SMOOTH_COST_TRUNCATED_L2 1
 
 #define SAVE_DCOST 0
-//method
-#define USE_PMF_PMBP 1
 
 #define BP_RECT 1
 

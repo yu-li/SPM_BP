@@ -217,11 +217,6 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 	printf("==================================================\n");
 	printf("SPM-BP begins\n");
 
-	// Build Graph 
-	
-
-	// Current Label of each pixel
-	//vector<vector<Vec2f>> label_k(height1*width1,vector<Vec2f> (NUM_TOP_K));
 
 	Mat_<Vec2f> label_k(height1*width1, NUM_TOP_K);
 	Mat_<float> dcost_k(height1*width1, NUM_TOP_K);
@@ -246,7 +241,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 	Mat_<Vec<float, NUM_TOP_K>>message(height1*width1, 4);
 	message.setTo(0);
 
-	//Smooth WT
+	//precompute smooth weight 
 	float omega[256];
 	for (int i=0; i<256; ++i)	omega[i] = lambda_smooth*std::exp(-float(i)/20);
 	Mat_<Vec4f> smoothWt(height1,width1);
@@ -343,8 +338,6 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 			}
 
 			getLocalDataCost(sp, vec_label_nei, DataCost_nei);//, label_saved, dcost_saved);
-
-#if USE_PMF_PMBP 
 
 			//start_disp = clock();
 			int curSPP = superpixelsList1[sp][0];
@@ -493,9 +486,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 				}
 				//cout<<"Message "<<clock()-start_disp<<endl;
  // propagation end
-
-#endif //PMBP
-		}//iterate sp end
+		} //superpixel scan end
 	if(display) Show_WTA_Flow(iter,label_k, dcost_k, message, flowResult);
 	finish_disp = clock();
 	printf("\n SPM-BP iter %d - Time Elapsed: %.3f\n", iter+1, double(finish_disp - start_disp)/(double)CLOCKS_PER_SEC);
