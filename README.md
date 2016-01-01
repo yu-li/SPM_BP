@@ -31,3 +31,6 @@ Project Website: [Efficient Inference for Continuous MRFs]
 Copyright (c) 2015, [Yu Li](http://yu-li.github.io/) All rights reserved.
 
 For research and education purpose only. 
+
+##
+<a href="http://www.clustrmaps.com/map/github.com/yu-li/spm-bp" title="Visitor Map for github.com/yu-li/spm-bp"><img src="//www.clustrmaps.com/map_v2.png?u=L99l&d=ChuUjrXPds7OUyyTCRrkMSjNs7XYk2CWof6arpS9XJo" /></a>
