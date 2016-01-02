@@ -12,7 +12,7 @@ Project Website: [Efficient Inference for Continuous MRFs]
 - The whole codes are in the `code` folder. You can use CMake to compile SPM-BP (Tested only on 64 bit Windows 7 with Visual Studio 2012; but the code should be able to run in Linux or Mac with slight modification).
 - For windows user, a compiled execuable with demo usage is provided in `Release` folder.
 - We will be happy if you cite us when using this code!
-- If you want to test *Stereo Matching* using SPM-BP, I can share the execuable upon request.
+- If you want to test *Stereo Matching* using SPM-BP, we can share the execuable upon request.
 
 ## Dependency
 - [OpenCV 3.0](http://opencv.org/opencv-3-0.html)
