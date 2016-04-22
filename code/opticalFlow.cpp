@@ -47,7 +47,7 @@ void opticalFlow::runFlowEstimator(const char* i1file, const char* i2file, const
 	//write result
 	Mat_<Vec3b> flow_color_t;
 	MotionToColor(flow_refined, flow_color_t, -1);
-	cv::imshow("Flow aft Post-processing",flow_color_t);
+	// cv::imshow("Flow aft Post-processing",flow_color_t);
 	cv::imwrite("flow_visualization.png",flow_color_t);
 	flow_color_t.release();
 	char flow_file_name[200];
