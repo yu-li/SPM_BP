@@ -454,7 +454,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 						{
 							vec_label.push_back(test_label);
 							kx = test_id*w;
-							Mat_<float> &local = DataCost_nei(cv::Rect(kx, 0, w, h));
+							const Mat_<float> &local = DataCost_nei(cv::Rect(kx, 0, w, h));
 							float dcost = local[bi-x][bj-y];
 							vec_d_cost.push_back(dcost);
 							//start_disp = clock();
@@ -696,7 +696,7 @@ void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_sup
 				for (int kk=0;kk<NUM_TOP_K;kk++)
 				{
 					kx = kk*w;
-					Mat_<float> &local = localDataCost(cv::Rect(kx, 0, w, h));
+					const Mat_<float> &local = localDataCost(cv::Rect(kx, 0, w, h));
 					dCost_super_k[pt][kk] = local[px-x][py-y];
 				}
 		}
