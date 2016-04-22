@@ -221,6 +221,8 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 	Mat_<Vec2f> label_k(height1*width1, NUM_TOP_K);
 	Mat_<float> dcost_k(height1*width1, NUM_TOP_K);
 	
+#ifdef _WIN32
+	// Dummy code that speeds up program on windows considerably
 	// Save label
 	vector<vector<Vec2f> > label_saved(numOfSP1);
 	//label_saved.reserve(10000);
@@ -232,6 +234,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 		label_saved[i].reserve(100000);
 		dcost_saved[i].reserve(100000);
 	}
+#endif
 
 	//initiate labels
 	init_label_super(label_k,dcost_k);
@@ -1170,12 +1173,12 @@ void spm_bp::Show_WTA_Flow(int iter, Mat_<Vec2f> & label_k, Mat_<float> &dCost_k
 		sprintf(fileName, "spmbp_iter= init.png");
 
 		if (display){
-		Mat_<Vec3b> flow_color_t;
-		MotionToColor(flowResult, flow_color_t, -1);
-		//cv::imwrite(fileName,flow_color_t);
-		cv::imshow("Current flow result",flow_color_t);
-		cv::waitKey(1);
-		flow_color_t.release();
+		    Mat_<Vec3b> flow_color_t;
+		    MotionToColor(flowResult, flow_color_t, -1);
+		    //cv::imwrite(fileName,flow_color_t);
+		    cv::imshow("Current flow result",flow_color_t);
+		    cv::waitKey(1);
+		    flow_color_t.release();
 		}
 }
 
