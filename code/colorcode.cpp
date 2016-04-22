@@ -111,7 +111,7 @@ void MotionToColor(const cv::Mat &motion, cv::Mat &colorMat, float maxmotion)
 			float rad = sqrt(fx * fx + fy * fy);
 			maxrad = __max(maxrad, rad);
 #endif
-#ifdef __UNIX__
+#ifdef __linux__
 			maxx = std::max<float>(maxx, fx);
 			maxy = std::max<float>(maxy, fy);
 			minx = std::min<float>(minx, fx);
