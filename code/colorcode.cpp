@@ -102,12 +102,24 @@ void MotionToColor(const cv::Mat &motion, cv::Mat &colorMat, float maxmotion)
 			//float fx = motion.at<cv::Vec2i>(y, x)[1];
 			float fy = motion.at<cv::Vec2f>(y, x)[1];
 			float fx = motion.at<cv::Vec2f>(y, x)[0];
+
+#ifdef _WIN32
 			maxx = __max(maxx, fx);
 			maxy = __max(maxy, fy);
 			minx = __min(minx, fx);
 			miny = __min(miny, fy);
 			float rad = sqrt(fx * fx + fy * fy);
 			maxrad = __max(maxrad, rad);
+#endif
+#ifdef __UNIX__
+			maxx = std::max<float>(maxx, fx);
+			maxy = std::max<float>(maxy, fy);
+			minx = std::min<float>(minx, fx);
+			miny = std::min<float>(miny, fy);
+			float rad = sqrt(fx * fx + fy * fy);
+			maxrad = std::max<float>(maxrad, rad);
+#endif
+
 		}
 	}
 	//printf("max motion: %.4f  motion range: u = %.3f .. %.3f;  v = %.3f .. %.3f\n",
