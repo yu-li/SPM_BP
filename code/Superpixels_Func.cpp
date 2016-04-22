@@ -384,7 +384,7 @@ void GetSegmentsRepresentativePixelsRandomAssign(const cv::Mat_<int> &segLabels,
 	width = segLabels.cols;
 
 	rePixel.create(numOfLabels, 1);
-	vector<vector<cv::Vec2i>> spPixels;
+	vector<vector<cv::Vec2i> > spPixels;
 	spPixels.resize(numOfLabels);
 	for (iy=0; iy<numOfLabels; ++iy)
 		spPixels[iy].clear();

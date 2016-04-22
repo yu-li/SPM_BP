@@ -1,7 +1,8 @@
 #ifndef __SUPERPIXELS_HEADER
 #define __SUPERPIXELS_HEADER
 
-#include "opencv2\opencv.hpp"
+#include <opencv2/core/core.hpp>
+// #include <opencv2/opencv.hpp>
 #include <vector>
 using std::vector;
 

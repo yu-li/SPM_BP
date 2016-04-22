@@ -55,7 +55,7 @@ public:
 	void clearUpMemory();
 	void runspm_bp(cv::Mat_<cv::Vec2f> &flowResult);
 	//float ComputeMes_PMBP_per_label(const float* dis_belief, Mat_<Vec2f> &label_k, int p, int p_ref, Vec2f disp_ref );
-	void Show_WTA_Flow(int iter, Mat_<Vec2f> &label_k, Mat_<float> &dCost_k, Mat_<Vec<float, NUM_TOP_K>>& message,cv::Mat_<cv::Vec2f> &flowResult);
+	void Show_WTA_Flow(int iter, Mat_<Vec2f> &label_k, Mat_<float> &dCost_k, Mat_<Vec<float, NUM_TOP_K> >& message,cv::Mat_<cv::Vec2f> &flowResult);
 
 	//input 
 	int height1, width1, height2, width2;
@@ -73,10 +73,10 @@ public:
 	Mat_<Vec2f> im1GradUp, im2GradUp;
 
 	// census bitset
-	vector<vector<bitset<CENSUS_SIZE_OF>>> censusBS1;
-	vector<vector<bitset<CENSUS_SIZE_OF>>> censusBS2;
-	vector<vector<vector<bitset<CENSUS_SIZE_OF>>>> subCensusBS1;
-	vector<vector<vector<bitset<CENSUS_SIZE_OF>>>> subCensusBS2;
+	vector<vector<bitset<CENSUS_SIZE_OF> > > censusBS1;
+	vector<vector<bitset<CENSUS_SIZE_OF> > > censusBS2;
+	vector<vector<vector<bitset<CENSUS_SIZE_OF> > > > subCensusBS1;
+	vector<vector<vector<bitset<CENSUS_SIZE_OF> > > > subCensusBS2;
 
 	//optical flow
 	int dispRange;
@@ -95,13 +95,13 @@ public:
 	int crossArmLength, crossColorTau;
 	cv::Mat_<cv::Vec4b> crossMap1, crossMap2;
 	// sub-image buffer and sub-image cross map buffer
-	vector<cv::Mat_<cv::Vec4b>> subCrossMap1;
-	vector<cv::Mat_<cv::Vec4b>> subCrossMap2;
+	vector<cv::Mat_<cv::Vec4b> > subCrossMap1;
+	vector<cv::Mat_<cv::Vec4b> > subCrossMap2;
 	void ModifyCrossMapArmlengthToFitSubImage( const cv::Mat_<cv::Vec4b> &crMapIn, int maxArmLength, cv::Mat_<cv::Vec4b> &crMapOut );
 	
 	// sub-image buffer
-	vector<Mat_<Vec3f>> subImage1;
-	vector<Mat_<Vec3f>> subImage2;
+	vector<Mat_<Vec3f> > subImage1;
+	vector<Mat_<Vec3f> > subImage2;
 
 
 	//PMBP
@@ -128,10 +128,10 @@ public:
 	vector<int> repPixels1, repPixels2;
 	GraphStructure spGraph1[2];
 	// to random assign pixels
-	vector<vector<int>> superpixelsList1;
-	vector<vector<int>> superpixelsList2;
-	void GetSuperpixelsListFromSegment(const Mat_<int> &segLabels, int numOfLabels, vector<vector<int>> &spPixelsList);
-	void RandomAssignRepresentativePixel(const vector<vector<int>> &spPixelsList, int numOfLabels, vector<int> &rePixel);
+	vector<vector<int> > superpixelsList1;
+	vector<vector<int> > superpixelsList2;
+	void GetSuperpixelsListFromSegment(const Mat_<int> &segLabels, int numOfLabels, vector<vector<int> > &spPixelsList);
+	void RandomAssignRepresentativePixel(const vector<vector<int> > &spPixelsList, int numOfLabels, vector<int> &rePixel);
 	// super pixel graph
 	void BuildSuperpixelsPropagationGraph( const Mat_<int> &refSegLabel, int numOfLabels, const Mat_<Vec3f> &refImg, GraphStructure &spGraphEven, GraphStructure &spGraphEvenOdd );
 	void AssociateLeftImageItselfToEstablishNonlocalPropagation( int sampleNum, int topK );

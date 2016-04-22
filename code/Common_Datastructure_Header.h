@@ -41,7 +41,7 @@ void spmbp_params_default(spm_bp_params* params);
 class GraphStructure
 {
 public:
-	vector<set<int>> adjList;
+	vector<set<int> > adjList;
 	int vertexNum;
 	GraphStructure();
 	GraphStructure(int num);

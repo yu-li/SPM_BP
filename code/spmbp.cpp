@@ -110,7 +110,7 @@ inline float ComputeMes_PMBP_per_label(const float* dis_belief, Mat_<Vec2f> &lab
 inline void Compute_top_k(vector<float> &vec_belief, vector<Vec2f> &vec_label, 
 								 vector<float> &vec_mes_l, vector<float> &vec_mes_r, vector<float> &vec_mes_u, vector<float> &vec_mes_d,
 								 vector<float> &vec_d_cost,
-								 Mat_<Vec<float, NUM_TOP_K>> &mes_pixel, Mat_<Vec2f> & label_pixel, Mat_<float>& d_cost, int p, int num_top_k)
+								 Mat_<Vec<float, NUM_TOP_K> > &mes_pixel, Mat_<Vec2f> & label_pixel, Mat_<float>& d_cost, int p, int num_top_k)
 {
 	int vec_in_size = vec_belief.size();
 	for(int i=0;i<num_top_k;i++)
@@ -142,7 +142,7 @@ inline void Compute_top_k(vector<float> &vec_belief, vector<Vec2f> &vec_label,
 	}
 }
 
-void Message_normalization_PMF_PMBP(Mat_<Vec<float, NUM_TOP_K>> &mes_pixel,int p, int num_top_k)  
+void Message_normalization_PMF_PMBP(Mat_<Vec<float, NUM_TOP_K> > &mes_pixel,int p, int num_top_k)  
 {
 	for(int i = 0; i<4; i++)
 	{
@@ -222,9 +222,9 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 	Mat_<float> dcost_k(height1*width1, NUM_TOP_K);
 	
 	// Save label
-	vector<vector<Vec2f>> label_saved(numOfSP1);
+	vector<vector<Vec2f> > label_saved(numOfSP1);
 	//label_saved.reserve(10000);
-	vector<vector<Mat_<float>>> dcost_saved(numOfSP1);
+	vector<vector<Mat_<float> > > dcost_saved(numOfSP1);
 	//dcost_saved.reserve(10000);
 	
 	for (int i = 0; i<numOfSP1; i++)
@@ -238,7 +238,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 
 
 	//MESSAGE 0:left, 1:right, 2:up, 3:down
-	Mat_<Vec<float, NUM_TOP_K>>message(height1*width1, 4);
+	Mat_<Vec<float, NUM_TOP_K> > message(height1*width1, 4);
 	message.setTo(0);
 
 	//precompute smooth weight 
@@ -502,7 +502,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 }
 
 
-void BuildCensus_bitset(Mat_<float> imgGray, int winSize, vector<vector<bitset<CENSUS_SIZE_OF>>>& CensusStr, int ImgHeight, int ImgWidth, int gap)
+void BuildCensus_bitset(Mat_<float> imgGray, int winSize, vector<vector<bitset<CENSUS_SIZE_OF> > >& CensusStr, int ImgHeight, int ImgWidth, int gap)
 {
 	int ix0, iy0, iyy;
 	int x, y;
@@ -644,7 +644,7 @@ void spm_bp::initiateData()
 	printf("==================================================\n");
 }
 
-void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_super_k)//, vector<vector<Vec2f>> &label_saved, vector<vector<Mat_<float>>> &dcost_saved)
+void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_super_k)//, vector<vector<Vec2f> > &label_saved, vector<vector<Mat_<float> > > &dcost_saved)
 {
 	printf("==================================================\n");
 	printf("Initiating particles...Done!\n");
@@ -705,14 +705,14 @@ void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_sup
 }
 
 
-void spm_bp::getLocalDataCost( int sp, vector<Vec2f> &flowList, Mat_<float> &localDataCost)//, vector<vector<Vec2f>> &label_saved, vector<vector<Mat_<float>>> &dcost_saved)
+void spm_bp::getLocalDataCost( int sp, vector<Vec2f> &flowList, Mat_<float> &localDataCost)//, vector<vector<Vec2f> > &label_saved, vector<vector<Mat_<float> > > &dcost_saved)
 {
 	int dSize = flowList.size();
 
 	//USE_COLOR_FEATURES
 	cv::Mat_<cv::Vec3f> subLt = subImage1[sp];
 #if USE_CENSUS
-	vector<vector<bitset<CENSUS_SIZE_OF>>> subLt_css = subCensusBS1[sp];
+	vector<vector<bitset<CENSUS_SIZE_OF> > > subLt_css = subCensusBS1[sp];
 	//cv::Mat_<Vec_css> subLt_css = subCensus1[sp];
 	//cv::Mat_<Vec_css_bit> subLt_css_bit = subCensus_bit1[sp];
 #endif
@@ -740,7 +740,7 @@ void spm_bp::getLocalDataCost( int sp, vector<Vec2f> &flowList, Mat_<float> &loc
 	cv::Mat_<Vec3f> subRt(h, w);
 	cv::Mat_<Vec2f> subRt_g(h, w);
 #if USE_CENSUS
-		vector<vector<bitset<CENSUS_SIZE_OF>>> subRt_css(h,vector<bitset<CENSUS_SIZE_OF>>(w));
+		vector<vector<bitset<CENSUS_SIZE_OF> > > subRt_css(h,vector<bitset<CENSUS_SIZE_OF> >(w));
 #endif
 
 	cv::Mat_<float> tmpCost(h,w);
@@ -898,7 +898,7 @@ int spm_bp::createAndOrganizeSuperpixels()
 	return 0;
 }
 
-void spm_bp::GetSuperpixelsListFromSegment( const Mat_<int> &segLabels, int numOfLabels, vector<vector<int>> &spPixelsList)
+void spm_bp::GetSuperpixelsListFromSegment( const Mat_<int> &segLabels, int numOfLabels, vector<vector<int> > &spPixelsList)
 {
 	int iy, ix, height, width;
 	//height = segLabels.rows;
@@ -977,7 +977,7 @@ void spm_bp::ModifyCrossMapArmlengthToFitSubImage( const cv::Mat_<cv::Vec4b> &cr
 }
 
 
-void spm_bp::RandomAssignRepresentativePixel( const vector<vector<int>> &spPixelsList, int numOfLabels, vector<int> &rePixel)
+void spm_bp::RandomAssignRepresentativePixel( const vector<vector<int> > &spPixelsList, int numOfLabels, vector<int> &rePixel)
 {
 	rePixel.resize(numOfLabels);
 	RNG rng;
@@ -1146,7 +1146,7 @@ void spm_bp::AssociateLeftImageItselfToEstablishNonlocalPropagation( int sampleN
 }
 
 
-void spm_bp::Show_WTA_Flow(int iter, Mat_<Vec2f> & label_k, Mat_<float> &dCost_k, Mat_<Vec<float, NUM_TOP_K>>& message, cv::Mat_<cv::Vec2f> &flowResult)
+void spm_bp::Show_WTA_Flow(int iter, Mat_<Vec2f> & label_k, Mat_<float> &dCost_k, Mat_<Vec<float, NUM_TOP_K> >& message, cv::Mat_<cv::Vec2f> &flowResult)
 {
 	float cost_perpixel[NUM_TOP_K];
 	Vec2f tmp;
