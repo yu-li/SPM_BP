@@ -9,7 +9,7 @@ Project Website: [Efficient Inference for Continuous MRFs]
 (https://publish.illinois.edu/visual-modeling-and-analytics/efficient-inference-for-continuous-mrfs/)
 
 ## Usage
-- The whole codes are in the `code` folder. You can use CMake to compile SPM-BP (Tested only on 64 bit Windows 7 with Visual Studio 2012; but the code should be able to run in Linux or Mac with slight modification).
+- The whole codes are in the `code` folder. You can use CMake to compile SPM-BP (Tested only on 64 bit Ubuntu 14.04 and Windows 7 with Visual Studio 2012).
 - For windows user, a compiled execuable with demo usage is provided in `Release` folder.
 - We will be happy if you cite us when using this code!
 - If you want to test *Stereo Matching* using SPM-BP, we can share the execuable upon request.
