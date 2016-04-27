@@ -143,6 +143,7 @@ public:
 	float g_filterKernelEpsl;
 
 	void getLocalDataCost( int sp, vector<Vec2f> &flowList, Mat_<float> &localDataCost);
+	void getLocalDataCostPerlabel(int sp, Vec2f &fl, Mat_<float> &localDataCost);
 	//labelling init
 	void init_label_super(Mat_<Vec2f> &label_k, Mat_<float> &dCost_super_k);
 

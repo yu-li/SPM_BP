@@ -4,7 +4,7 @@
 #include "string.h"
 #include "math.h"
 #include "time.h"
-
+#include "omp.h"
 #include <vector>
 #include "opencv2/opencv.hpp"
 #include "CF_Filter_Header.h"
@@ -12,7 +12,7 @@
 #include "Superpixels_Header.h"
 #include "colorcode.h"
 
-#include "omp.h"
+
 
 using std::vector;
 using std::min;
@@ -50,7 +50,7 @@ void spm_bp::setParameters(spm_bp_params* params)
 	alpha = params->alpha; //weight for gradient components
 	tau_c = params->tau_c;
 	tau_s = params->tau_s;
-	upScale = params->up_rate;
+    upScale = params->up_rate;
 	lambda_smooth = params->lambda;
 
 	//super pixel
@@ -198,7 +198,7 @@ void spm_bp::clearUpMemory()
 }
 void spm_bp::preProcessing()
 {
-	// Create Superpixels AND Build Graph 
+    // Superpixels AND Build Graph
 	createAndOrganizeSuperpixels();
 	BuildSuperpixelsPropagationGraph(segLabels1, numOfSP1, im1f, spGraph1[0],spGraph1[1]);
 	AssociateLeftImageItselfToEstablishNonlocalPropagation( 30, 5 );
@@ -284,6 +284,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 	vec_d_cost.reserve(NUM_TOP_K*50);
 
 	start_disp = clock();
+    double wall_timer = omp_get_wtime();
 	if(display) Show_WTA_Flow(-1, label_k, dcost_k, message, flowResult);
 
 	for(int iter=0;iter<iterNum;iter++)
@@ -297,7 +298,14 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 
 		for(int sp = spBegin; sp!=spEnd; sp += spStep)
 		{
-			// rand neighbor pixel and store
+            int curSPP = superpixelsList1[sp][0];
+            Vec4i curRange = subRange1[curSPP];
+            int y = curRange[0];
+            int x = curRange[1];
+            int w = curRange[2]-curRange[0]+1;
+            int h = curRange[3]-curRange[1]+1;
+
+            // rand neighbor pixel and store
 			vec_label_nei.clear();
 			std::set<int>::iterator sIt;
 			std::set<int> &sAdj = spGraph1[iter%2].adjList[sp];
@@ -340,16 +348,29 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 				}
 			}
 
-			getLocalDataCost(sp, vec_label_nei, DataCost_nei);//, label_saved, dcost_saved);
+            int vec_size = vec_label_nei.size();
+            DataCost_nei.release();
+            DataCost_nei.create(h, w*vec_size);
+            DataCost_nei.setTo(0);
+#if USE_CLMF0_TO_AGGREGATE_COST
+            cv::Mat_<cv::Vec4b> leftCombinedCrossMap;
+            leftCombinedCrossMap.create(h, w);
+            subCrossMap1[sp].copyTo(leftCombinedCrossMap);
+            CFFilter cff;
+#endif
 
-			//start_disp = clock();
-			int curSPP = superpixelsList1[sp][0];
-			Vec4i curRange = subRange1[curSPP];
-			int y = curRange[0];
-			int x = curRange[1];
-			int w = curRange[2]-curRange[0]+1;
-			int h = curRange[3]-curRange[1]+1;
-			
+#pragma omp parallel for num_threads(8)
+            for (int i = 0; i < vec_size; ++i){
+                int kx = i*w;
+                Mat_<float> rawCost;
+                getLocalDataCostPerlabel(sp, vec_label_nei[i], rawCost);
+#if USE_CLMF0_TO_AGGREGATE_COST
+                cff.FastCLMF0FloatFilterPointer(leftCombinedCrossMap, rawCost, rawCost);
+#endif
+                rawCost.copyTo(DataCost_nei(cv::Rect(kx, 0, w, h)));
+            }
+            //getLocalDataCost(sp, vec_label_nei, DataCost_nei);
+
 			Vec4i curRange_s = spRange1[curSPP];
 			int spw = curRange_s[2]-curRange_s[0]+1;
 			int sph = curRange_s[3]-curRange_s[1]+1;
@@ -492,7 +513,8 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 		} //superpixel scan end
 	if(display) Show_WTA_Flow(iter,label_k, dcost_k, message, flowResult);
 	finish_disp = clock();
-	printf("\n SPM-BP iter %d - Time Elapsed: %.3f\n", iter+1, double(finish_disp - start_disp)/(double)CLOCKS_PER_SEC);
+    std::cout << " time on clock(): " << (double) (clock() - start_disp) / CLOCKS_PER_SEC
+       << " time on wall: " <<  omp_get_wtime() - wall_timer << "\n";
 	}//iteration
 	Show_WTA_Flow(iterNum,label_k, dcost_k, message, flowResult);
 	printf("==================================================\n");
@@ -516,7 +538,7 @@ void BuildCensus_bitset(Mat_<float> imgGray, int winSize, vector<vector<bitset<C
 	int wid_side = (winSize - 1)*gap / 2;
 	CensusStr.clear();
 	CensusStr.resize(ImgHeight);
-
+//#pragma omp parallel for private(ix0, iy0, x, y, PixIdx, censusIdx, centerValue, tempValue) num_threads(8)
 	for(iy0 = 0; iy0 < ImgHeight; ++iy0)
 	{
 		CensusStr[iy0].clear();
@@ -552,13 +574,14 @@ void spm_bp::initiateData()
 	//// upsample image
 	printf("==================================================\n");
 	printf("Preparing...");
-	// left 
-	width1_up = width1*upScale;		height1_up = height1*upScale;
+    width1_up = width1*upScale;		height1_up = height1*upScale;
+    clock_t start = clock();
+    double wall_timer = omp_get_wtime();
+    // left
 	cv::resize(im1f, im1Up, cv::Size(width1*upScale, height1*upScale ), 0.0, 0.0, CV_INTER_CUBIC);
 	cv::Mat_<float> tmp1GrayUp;
 	cv::cvtColor(im1Up, tmp1GrayUp, CV_BGR2GRAY);
 	BuildCensus_bitset(tmp1GrayUp,CENSUS_WINSIZE,censusBS1, height1_up, width1_up, upScale);
-
 	tmp1GrayUp.release();
 	// right
 	cv::resize(im2f, im2Up, cv::Size(width2*upScale, height2*upScale), 0.0, 0.0, CV_INTER_CUBIC);
@@ -643,6 +666,8 @@ void spm_bp::initiateData()
 		}
 	}
 #endif
+    std::cout << " time on clock(): " << (double) (clock() - start) / CLOCKS_PER_SEC
+               << " time on wall: " <<  omp_get_wtime() - wall_timer;
 	printf("Done!\n");
 	printf("==================================================\n");
 }
@@ -655,8 +680,15 @@ void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_sup
 	Mat_<float> localDataCost;
 	for (int sp=0;sp<numOfSP1;++sp)
 	{
-		label_vec.clear();
+        int id = repPixels1[sp];
+        int y = subRange1[id][0];
+        int x = subRange1[id][1];
+        int h = subRange1[id][3]-subRange1[id][1]+1;
+        int w = subRange1[id][2]-subRange1[id][0]+1;
+
+        label_vec.clear();
 		int k=0;
+
 		while(k<NUM_TOP_K)
 		{
 			float du =  (float(rand())/RAND_MAX-0.5)*2*(float)disp_range_u; 
@@ -683,12 +715,28 @@ void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_sup
 				}
 			}
 		}
-		getLocalDataCost( sp, label_vec, localDataCost);//, label_saved, dcost_saved );
-		int id = repPixels1[sp];
-		int y = subRange1[id][0];
-		int x = subRange1[id][1];
-		int h = subRange1[id][3]-subRange1[id][1]+1;
-		int w = subRange1[id][2]-subRange1[id][0]+1;
+#if USE_CLMF0_TO_AGGREGATE_COST
+        cv::Mat_<cv::Vec4b> leftCombinedCrossMap;
+        leftCombinedCrossMap.create(h, w);
+        subCrossMap1[sp].copyTo(leftCombinedCrossMap);
+        CFFilter cff;
+#endif
+        int vec_size = label_vec.size();
+        localDataCost.create(h, w*vec_size);
+        localDataCost.setTo(0);
+#pragma omp parallel for num_threads(8)
+        for (int i = 0; i < vec_size; ++i){
+                int kx = i*w;
+                Mat_<float> rawCost;
+                getLocalDataCostPerlabel(sp, label_vec[i], rawCost);
+#if USE_CLMF0_TO_AGGREGATE_COST
+                cff.FastCLMF0FloatFilterPointer(leftCombinedCrossMap, rawCost, rawCost);
+#endif
+                rawCost.copyTo(localDataCost(cv::Rect(kx, 0, w, h)));
+        }
+
+        //getLocalDataCost( sp, label_vec, localDataCost);
+
 		int pt,px,py,kx;
 		for(int ii = 0; ii<superpixelsList1[sp].size(); ++ii)
 		{
@@ -859,6 +907,105 @@ void spm_bp::getLocalDataCost( int sp, vector<Vec2f> &flowList, Mat_<float> &loc
 	//cout<<label_saved[sp].size()<<endl;
 }
 
+void spm_bp::getLocalDataCostPerlabel(int sp, Vec2f &fl, Mat_<float> &localDataCost)
+{
+    //USE_COLOR_FEATURES
+    cv::Mat_<cv::Vec3f> subLt = subImage1[sp];
+#if USE_CENSUS
+    vector<vector<bitset<CENSUS_SIZE_OF> > > subLt_css = subCensusBS1[sp];
+#endif
+
+    int upHeight, upWidth;
+    upHeight = im1Up.rows;
+    upWidth = im1Up.cols;
+
+    // extract sub-image from subrange
+    int p1 = repPixels1[sp];
+    int w = subRange1[p1][2] - subRange1[p1][0] + 1;
+    int h = subRange1[p1][3] - subRange1[p1][1] + 1;
+    int x = subRange1[p1][0];
+    int y = subRange1[p1][1];
+
+    localDataCost.release();
+    localDataCost.create(h, w);
+    //Mat_<float> rawCost(h, w);
+    Mat_<Vec3f> subRt(h, w);
+    vector<vector<bitset<CENSUS_SIZE_OF> > > subRt_css(h, vector<bitset<CENSUS_SIZE_OF> >(w));
+#if SAVE_DCOST
+        if (check_id >= 0)
+        {
+            cout << "hit" << endl;
+        }
+#endif
+
+    Vec3f *subLtPtr = (cv::Vec3f *)(subLt.ptr(0));
+    Vec3f *subRtPtr = (cv::Vec3f *)(subRt.ptr(0));
+    float *rawCostPtr = (float *)(localDataCost.ptr(0));
+
+    int cy, cx, oy, ox;
+    oy = y;
+    for (cy = 0; cy < h; ++cy, ++oy)
+    {
+        ox = x;
+        for (cx = 0; cx < w; ++cx, ++ox)
+        {
+            int oyUp, oxUp;
+            oyUp = (oy + fl[0])*upScale;
+            oxUp = (ox + fl[1])*upScale;
+            (oyUp < 0) ? oyUp = 0 : NULL;
+            (oyUp >= upHeight) ? oyUp = upHeight - 1 : NULL;
+            (oxUp < 0) ? oxUp = 0 : NULL;
+            (oxUp >= upWidth) ? oxUp = upWidth - 1 : NULL;
+#if USE_POINTER_WISE
+            *subRtPtr++ = im2Up[oyUp][oxUp];
+#else
+            subRt[cy][cx] = im2Up[oyUp][oxUp];
+#endif
+
+
+#if USE_CENSUS
+            subRt_css[cy][cx] = censusBS2[oyUp][oxUp];
+#endif
+        }
+    }
+        // calculate raw cost
+        subLtPtr = (cv::Vec3f *)(subLt.ptr(0));
+        subRtPtr = (cv::Vec3f *)(subRt.ptr(0));
+        rawCostPtr = (float *)(localDataCost.ptr(0));
+
+        int iy, ix;
+        for (iy = 0; iy < h; ++iy)
+        {
+            for (ix = 0; ix < w; ++ix)
+            {
+
+#if DATA_COST_ADCENSUS
+                bitset<CENSUS_SIZE_OF> tmpBS = subRt_css[iy][ix] ^ subLt_css[iy][ix];
+#if USE_POINTER_WISE
+                float dist_c = fabs((float)(*subLtPtr)[0] - (*subRtPtr)[0])
+                    + fabs((float)(*subLtPtr)[1] - (*subRtPtr)[1])
+                    + fabs((float)(*subLtPtr++)[2] - (*subRtPtr++)[2]);
+#else
+                float dist_c = std::abs(subLt[iy][ix][0] - subRt[iy][ix][0])
+                    + std::abs(subLt[iy][ix][1] - subRt[iy][ix][1])
+                    + std::abs(subLt[iy][ix][2] - subRt[iy][ix][2]);
+#endif
+                float dist_css = expCensusDiffTable[tmpBS.count()];
+                float dist_ce = expColorDiffTable[int(dist_c / 3)];
+
+#if USE_POINTER_WISE
+                *rawCostPtr++ = dist_css * 255 + dist_ce * 255;
+#else
+                localDataCost[iy][ix] = dist_css * 255 + dist_ce * 255;//beta*min(dist_c/3,tau_c);//beta*min(dist_c/3,tau_c);//*255 + beta*min(dist_c/3,tau_c);
+#endif
+
+#endif
+            }
+        }
+#if SAVE_DCOST
+        label_saved[sp].push_back(fl);
+#endif
+}
 
 int spm_bp::createAndOrganizeSuperpixels()
 {
@@ -870,18 +1017,21 @@ int spm_bp::createAndOrganizeSuperpixels()
 	vector<Vec4i> sub1, sub2;
 	vector<Vec4i> sp1, sp2;
 
-	clock_t start_disp, finish_disp;
-	start_disp = clock();
+#pragma omp parallel for
+    for(int i = 0 ; i<2 ; ++i)
+    {
+        if(i==0){
+            numOfSP1 = CreateSLICSegments(img1, label1, g_spNumber, g_spSize, g_spSizeOrNumber);
+            GetSubImageRangeFromSegments(label1, numOfSP1, g_filterKernelBoundarySize, sub1, sp1);
+            cout<<"sp1"<<endl;
+        }
+        else {
+            numOfSP2 = CreateSLICSegments(img2, label2, g_spNumber, g_spSize, g_spSizeOrNumber);
+            GetSubImageRangeFromSegments(label2, numOfSP2, g_filterKernelBoundarySize, sub2, sp2);
+            cout<<"sp2"<<endl;
+        }
+    }
 
-	if (g_spMethod == 0)
-	{
-		numOfSP1 = CreateSLICSegments(img1, label1, g_spNumber, g_spSize, g_spSizeOrNumber);
-		GetSubImageRangeFromSegments(label1, numOfSP1, g_filterKernelBoundarySize, sub1, sp1);
-		numOfSP2 = CreateSLICSegments(img2, label2, g_spNumber, g_spSize, g_spSizeOrNumber);
-		GetSubImageRangeFromSegments(label2, numOfSP2, g_filterKernelBoundarySize, sub2, sp2);
-	}
-
-	finish_disp = clock();
 
 	printf("==================================================\n");
 	printf("Created [%d, %d] segments and sub-images\n",numOfSP1,numOfSP2);

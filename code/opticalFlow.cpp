@@ -32,11 +32,18 @@ void opticalFlow::runFlowEstimator(const char* i1file, const char* i2file, const
 	flow21.create(height2,width2);
 	occMap.create(height1,width1);
 
-	//optical flow from frame 1 to frame 2
-	opticalFlowEst( im1, im2, flow12, params);
-	//optical flow from frame 2 to frame 1
-	opticalFlowEst( im2, im1, flow21, params);
 	
+#pragma omp parallel for
+    for(int i = 0 ; i<2 ; ++i)
+    {
+        if(i==0)
+	//optical flow from frame 1 to frame 2	
+	{opticalFlowEst( im1, im2, flow12, params);}
+	
+	else
+	//optical flow from frame 2 to frame 1
+	{opticalFlowEst( im2, im1, flow21, params);} 
+   }
 	//left-right consistancy check (occlusion estimation)
 	occMap.create(height1,width1);
 	occMatpEst( flow12, flow21, occMap);
