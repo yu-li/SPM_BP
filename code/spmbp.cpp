@@ -125,18 +125,18 @@ inline void Compute_top_k(vector<float> &vec_belief, vector<Vec2f> &vec_label,
 				id = j;
 			}
 		}
-		mes_pixel[p][0][i] = vec_mes_l[id];
-		mes_pixel[p][1][i] = vec_mes_r[id];
-		mes_pixel[p][2][i] = vec_mes_u[id];
-		mes_pixel[p][3][i] = vec_mes_d[id];
+		if(vec_mes_l.size()) mes_pixel[p][0][i] = vec_mes_l[id];
+		if(vec_mes_r.size()) mes_pixel[p][1][i] = vec_mes_r[id];
+		if(vec_mes_u.size()) mes_pixel[p][2][i] = vec_mes_u[id];
+		if(vec_mes_d.size()) mes_pixel[p][3][i] = vec_mes_d[id];
 		label_pixel[p][i] = vec_label[id];
 		d_cost[p][i] = vec_d_cost[id];
 
 		vec_belief[id] = vec_belief[i];
-		vec_mes_l[id] = vec_mes_l[i];
-		vec_mes_r[id] = vec_mes_r[i];
-		vec_mes_u[id] = vec_mes_u[i];
-		vec_mes_d[id] = vec_mes_d[i];
+		if(vec_mes_l.size()) vec_mes_l[id] = vec_mes_l[i];
+		if(vec_mes_r.size()) vec_mes_r[id] = vec_mes_r[i];
+		if(vec_mes_u.size()) vec_mes_u[id] = vec_mes_u[i];
+		if(vec_mes_d.size()) vec_mes_d[id] = vec_mes_d[i];
 		vec_label[id] = vec_label[i];
 		vec_d_cost[id] = vec_d_cost[i];
 	}

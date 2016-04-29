@@ -18,7 +18,7 @@ class opticalFlow
 	~opticalFlow(void);
 
 	void opticalFlowEst(Mat& im1, Mat&im2, Mat_<Vec2f> &flow12, spm_bp_params* params);
-	void occMatpEst( Mat_<Vec2f> &flow12, Mat_<Vec2f> &flow21, Mat_<uchar>&occMap);
+	void occMapEst( Mat_<Vec2f> &flow12, Mat_<Vec2f> &flow21, Mat_<uchar>&occMap);
 	void opticalFlowRefine(Mat_<Vec2f> &flow12, Mat_<uchar> &occMap,const Mat_<Vec3b> &weightColorImg, Mat_<Vec2f> &flow_refined);
 
 	void runFlowEstimator(const char* i1file, const char* i2file, const char* seqName, spm_bp_params* params);

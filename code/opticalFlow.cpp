@@ -46,7 +46,7 @@ void opticalFlow::runFlowEstimator(const char* i1file, const char* i2file, const
    }
 	//left-right consistancy check (occlusion estimation)
 	occMap.create(height1,width1);
-	occMatpEst( flow12, flow21, occMap);
+	occMapEst( flow12, flow21, occMap);
 
 	//post processing (occlusion region filling)
 	opticalFlowRefine(flow12, occMap, im1, flow_refined);
@@ -82,7 +82,7 @@ void opticalFlow::opticalFlowEst(Mat& img1, Mat&img2, Mat_<Vec2f> &flow, spm_bp_
 	delete estimator;
 }
 
-void opticalFlow::occMatpEst( Mat_<Vec2f> &flow12, Mat_<Vec2f> &flow21, Mat_<uchar>&occMap)
+void opticalFlow::occMapEst( Mat_<Vec2f> &flow12, Mat_<Vec2f> &flow21, Mat_<uchar>&occMap)
 {
 	int iy, ix;
 
@@ -114,7 +114,6 @@ void opticalFlow::occMatpEst( Mat_<Vec2f> &flow12, Mat_<Vec2f> &flow21, Mat_<uch
     Mat labelImage(occMap.size(), CV_32S);
     int nLabels = connectedComponents(bw, labelImage, 8);
 
-	occMap[iy][ix] = 0;
 	vector<int> hist(nLabels,0);
 	for (iy=0; iy<height1; ++iy)
 		for (ix=0; ix<width1; ++ix)
