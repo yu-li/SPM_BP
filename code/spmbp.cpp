@@ -25,7 +25,7 @@ spm_bp::spm_bp()
 
 spm_bp::~spm_bp(void)
 {
-	clearUpMemory();
+
 }
 
 void spm_bp::loadPairs(cv::Mat& in1, Mat& in2)
@@ -172,30 +172,6 @@ Vec2f WTA_PerPixel_Min_PMF_PMBP(float *pCost2, Mat_<Vec2f> & plabel, int p, int 
 	return plabel[p][Disp];
 }
 
-void spm_bp::clearUpMemory()
-{
-	im1f.release();		im2f.release();
-	im1d.release();		im2d.release();
-	im1Gray.release();	im2Gray.release();
-	im1Up.release();	im2Up.release();
-	segLabels1.release(); segLabels2.release();
-
-	crossMap1.release(); crossMap2.release();
-	censusBS1.clear();	censusBS2.clear();
-	subCensusBS1.clear(); subCensusBS2.clear();
-
-	int iy;
-	for (iy=0; iy<numOfSP1; ++iy)
-	{
-		subImage1[iy].release();
-	}
-	subImage1.clear();
-	subCrossMap1.clear();
-
-	subImage2.clear();
-	subCrossMap2.clear();
-
-}
 void spm_bp::preProcessing()
 {
     // Superpixels AND Build Graph
@@ -260,11 +236,6 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 			smoothWt[i][j][3] = omega[int(abs(norm(ref-im1f[i+1][j])))];
 		
 		}
-
-	float per_pixel_costl_selected[NUM_TOP_K];
-	float per_pixel_costr_selected[NUM_TOP_K];
-	float per_pixel_costu_selected[NUM_TOP_K];
-	float per_pixel_costd_selected[NUM_TOP_K];
 
 	float dis_belief_l[NUM_TOP_K];
 	float dis_belief_r[NUM_TOP_K];
@@ -359,7 +330,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
             CFFilter cff;
 #endif
 
-#pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(NTHREADS)
             for (int i = 0; i < vec_size; ++i){
                 int kx = i*w;
                 Mat_<float> rawCost;
@@ -419,18 +390,17 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 					int pl = bi*width1+(bj-1);		int pu = (bi-1)*width1+bj;
 					int pr = bi*width1+(bj+1);		int pd = (bi+1)*width1+bj;	
 					
-					//if( bi==0 || bi==height1-1 || bj==0 || bj==width1-1) continue;
 					//Compute disbelief: three incoming message + data_cost
 					for(int k=0;k<NUM_TOP_K;++k)
 					{
 						if ( bj!=0 )
 						dis_belief_l[k] = message[pl][0][k] + message[pl][2][k] + message[pl][3][k]+ dcost_k[pl][k];
 						if ( bj!=width1-1 )
-						dis_belief_r[k] = message[pr][1][k] + message[pr][2][k] + message[pr][3][k] + dcost_k[pr][k];//compDcostBF(pr,label_k[pr][k]);
+                        dis_belief_r[k] = message[pr][1][k] + message[pr][2][k] + message[pr][3][k] + dcost_k[pr][k];
 						if ( bi!=0 )
-						dis_belief_u[k] = message[pu][0][k] + message[pu][1][k] + message[pu][2][k] + dcost_k[pu][k];//compDcostBF(pu,label_k[pu][k]);
+                        dis_belief_u[k] = message[pu][0][k] + message[pu][1][k] + message[pu][2][k] + dcost_k[pu][k];
 						if ( bi!=height1-1 )
-						dis_belief_d[k] = message[pd][0][k] + message[pd][1][k] + message[pd][3][k] + dcost_k[pd][k];//compDcostBF(pd,label_k[pd][k]);
+                        dis_belief_d[k] = message[pd][0][k] + message[pd][1][k] + message[pd][3][k] + dcost_k[pd][k];
 					}
 
 					vec_label.clear();
@@ -441,6 +411,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 
 					// Update and save messages with current reference pixel's labels
 					Vec4f wt_s = smoothWt[bi][bj];
+
 					for(int k=0;k<NUM_TOP_K;++k)
 					{
 						Vec2f test_label = label_k[p1][k];
@@ -519,11 +490,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f> &flowResult)
 	Show_WTA_Flow(iterNum,label_k, dcost_k, message, flowResult);
 	printf("==================================================\n");
 	printf("SPM-BP finished\n==================================================\n");
-	
-	dcost_k.release();
-	label_k.release();
-	message.release();
-	smoothWt.release();
+
 }
 
 
@@ -538,7 +505,7 @@ void BuildCensus_bitset(Mat_<float> imgGray, int winSize, vector<vector<bitset<C
 	int wid_side = (winSize - 1)*gap / 2;
 	CensusStr.clear();
 	CensusStr.resize(ImgHeight);
-//#pragma omp parallel for private(ix0, iy0, x, y, PixIdx, censusIdx, centerValue, tempValue) num_threads(8)
+//#pragma omp parallel for private(ix0, iy0, x, y, PixIdx, censusIdx, centerValue, tempValue) num_threads(NTHREADS)
 	for(iy0 = 0; iy0 < ImgHeight; ++iy0)
 	{
 		CensusStr[iy0].clear();
@@ -594,7 +561,7 @@ void spm_bp::initiateData()
 	float miu = 0.386*CENSUS_SIZE_OF;
 	for (int iy=0; iy<=CENSUS_SIZE_OF; ++iy)	expCensusDiffTable[iy] = 1.0-exp(-(double)iy/30);
 
-	for (int iy=0; iy<=256; ++iy)	expColorDiffTable[iy] = 1.0-exp(-(double)iy/60);
+    for (int iy=0; iy<256; ++iy)	expColorDiffTable[iy] = 1.0-exp(-(double)iy/60);
 	
 	int iy;
 #if USE_CENSUS
@@ -724,7 +691,7 @@ void spm_bp::init_label_super(Mat_<Vec2f> &label_super_k, Mat_<float> &dCost_sup
         int vec_size = label_vec.size();
         localDataCost.create(h, w*vec_size);
         localDataCost.setTo(0);
-#pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(NTHREADS)
         for (int i = 0; i < vec_size; ++i){
                 int kx = i*w;
                 Mat_<float> rawCost;
@@ -836,12 +803,11 @@ void spm_bp::getLocalDataCost( int sp, vector<Vec2f> &flowList, Mat_<float> &loc
 				int oyUp, oxUp;
 				oyUp = (oy+fl[0])*upScale;
 				oxUp = (ox+fl[1])*upScale;
-				if (fl[0]!=0)
-				//cout<<fl[0]<<"   "<<oy<<"   "<<oyUp<<endl;
-				(oyUp < 0)? oyUp = 0: NULL;
-				(oyUp >= upHeight)? oyUp = upHeight-1: NULL;
-				(oxUp < 0)? oxUp = 0: NULL;
-				(oxUp >= upWidth)? oxUp = upWidth-1: NULL;
+
+                if (oyUp < 0) oyUp = 0;
+                if (oyUp >= upHeight) oyUp = upHeight-1;
+                if (oxUp < 0) oxUp = 0;
+                if (oxUp >= upWidth) oxUp = upWidth-1;
 #if USE_POINTER_WISE
 				*subRtPtr++ = im2Up[oyUp][oxUp];
 #else
@@ -952,10 +918,10 @@ void spm_bp::getLocalDataCostPerlabel(int sp, Vec2f &fl, Mat_<float> &localDataC
             int oyUp, oxUp;
             oyUp = (oy + fl[0])*upScale;
             oxUp = (ox + fl[1])*upScale;
-            (oyUp < 0) ? oyUp = 0 : NULL;
-            (oyUp >= upHeight) ? oyUp = upHeight - 1 : NULL;
-            (oxUp < 0) ? oxUp = 0 : NULL;
-            (oxUp >= upWidth) ? oxUp = upWidth - 1 : NULL;
+            if (oyUp < 0) oyUp = 0;
+            if (oyUp >= upHeight) oyUp = upHeight-1;
+            if (oxUp < 0) oxUp = 0;
+            if (oxUp >= upWidth) oxUp = upWidth-1;
 #if USE_POINTER_WISE
             *subRtPtr++ = im2Up[oyUp][oxUp];
 #else

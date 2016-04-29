@@ -20,6 +20,7 @@ using std::endl;
 #define DO_LEFT 1
 #define DO_RIGHT 0
 #define NUM_TOP_K 3                             ///////////3
+#define NTHREADS 8
 #define EPS 0.01
 //data cost
 #define DATA_COST_TRUNCATED_L1 0
