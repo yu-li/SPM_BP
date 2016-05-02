@@ -227,7 +227,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
 
     for (int i = 1; i < height1 - 1; ++i)
         for (int j = 1; j < width1 - 1; ++j) {
-            Vec3f ref = im1f[i][j];
+            const Vec3f &ref = im1f[i][j];
             smoothWt[i][j][0] = omega[int(abs(norm(ref - im1f[i][j - 1])))];
             smoothWt[i][j][1] = omega[int(abs(norm(ref - im1f[i][j + 1])))];
             smoothWt[i][j][2] = omega[int(abs(norm(ref - im1f[i - 1][j])))];
