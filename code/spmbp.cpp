@@ -35,6 +35,8 @@ void spm_bp::loadPairs(cv::Mat& in1, Mat& in2)
     width2 = im2f.cols;
     height2 = im2f.rows;
     srand(time(NULL));
+    // printf("Setting random seed\n");
+    // srand(813867);
 }
 
 void spm_bp::setParameters(spm_bp_params* params)
@@ -55,7 +57,6 @@ void spm_bp::setParameters(spm_bp_params* params)
     g_spMethod = 0;
     g_spNumber = params->sp_num;
     g_spSize = params->sp_num;
-    ;
     g_spSizeOrNumber = 1;
 
     //filter kernel
@@ -198,6 +199,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
     Mat_<float> dcost_k(height1 * width1, NUM_TOP_K);
 
 #ifdef _WIN32
+    printf("Running on Windows\n");
     // Dummy code that speeds up program on windows considerably
     // Save label
     vector<vector<Vec2f> > label_saved(numOfSP1);
@@ -222,10 +224,12 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
     float omega[256];
     for (int i = 0; i < 256; ++i)
         omega[i] = lambda_smooth * std::exp(-float(i) / 20);
+
     Mat_<Vec4f> smoothWt(height1, width1);
     smoothWt.setTo(lambda_smooth);
 
     for (int i = 1; i < height1 - 1; ++i)
+    {
         for (int j = 1; j < width1 - 1; ++j) {
             const Vec3f &ref = im1f[i][j];
             smoothWt[i][j][0] = omega[int(abs(norm(ref - im1f[i][j - 1])))];
@@ -233,23 +237,23 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
             smoothWt[i][j][2] = omega[int(abs(norm(ref - im1f[i - 1][j])))];
             smoothWt[i][j][3] = omega[int(abs(norm(ref - im1f[i + 1][j])))];
         }
+    }
 
     float dis_belief_l[NUM_TOP_K];
     float dis_belief_r[NUM_TOP_K];
     float dis_belief_u[NUM_TOP_K];
     float dis_belief_d[NUM_TOP_K];
 
-    vector<Vec2f> vec_label, vec_label_nei;
-    vector<float> vec_mes_l, vec_mes_r, vec_mes_u, vec_mes_d, vec_belief, vec_d_cost;
+    const int BUFSIZE = NUM_TOP_K * 50;
+
+    vector<Vec2f> vec_label(BUFSIZE), vec_label_nei(BUFSIZE);
+    vector<float> vec_mes_l(BUFSIZE),
+                  vec_mes_r(BUFSIZE),
+                  vec_mes_u(BUFSIZE),
+                  vec_mes_d(BUFSIZE),
+                  vec_belief(BUFSIZE),
+                  vec_d_cost(BUFSIZE);
     Mat_<float> DataCost_nei;
-    vec_label.reserve(NUM_TOP_K * 50);
-    vec_label_nei.reserve(NUM_TOP_K * 50);
-    vec_mes_l.reserve(NUM_TOP_K * 50);
-    vec_mes_r.reserve(NUM_TOP_K * 50);
-    vec_mes_u.reserve(NUM_TOP_K * 50);
-    vec_mes_d.reserve(NUM_TOP_K * 50);
-    vec_belief.reserve(NUM_TOP_K * 50);
-    vec_d_cost.reserve(NUM_TOP_K * 50);
 
     start_disp = clock();
     double wall_timer = omp_get_wtime();
@@ -308,10 +312,12 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
                 }
             }
 
-            int vec_size = vec_label_nei.size();
-            DataCost_nei.release();
-            DataCost_nei.create(h, w * vec_size);
-            DataCost_nei.setTo(0);
+            const int vec_size = vec_label_nei.size();
+            DataCost_nei = Mat_<float>::zeros(h, w * vec_size);
+
+            // DataCost_nei.release();
+            // DataCost_nei.create(h, w * vec_size);
+            // DataCost_nei.setTo(0);
 #if USE_CLMF0_TO_AGGREGATE_COST
             cv::Mat_<cv::Vec4b> leftCombinedCrossMap;
             leftCombinedCrossMap.create(h, w);
@@ -479,7 +485,10 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
     printf("SPM-BP finished\n==================================================\n");
 }
 
-void BuildCensus_bitset(Mat_<float> imgGray, int winSize, vector<vector<bitset<CENSUS_SIZE_OF> > >& CensusStr, int ImgHeight, int ImgWidth, int gap)
+void BuildCensus_bitset(const Mat_<float> &imgGray,
+                        int winSize,
+                        vector<vector<bitset<CENSUS_SIZE_OF> > >& CensusStr,
+                        int ImgHeight, int ImgWidth, int gap)
 {
     int ix0, iy0, iyy;
     int x, y;
@@ -834,7 +843,7 @@ void spm_bp::getLocalDataCost(int sp, vector<Vec2f>& flowList, Mat_<float>& loca
     //cout<<label_saved[sp].size()<<endl;
 }
 
-void spm_bp::getLocalDataCostPerlabel(int sp, Vec2f& fl, Mat_<float>& localDataCost)
+void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& localDataCost)
 {
     //USE_COLOR_FEATURES
     cv::Mat_<cv::Vec3f> subLt = subImage1[sp];
@@ -876,14 +885,20 @@ void spm_bp::getLocalDataCostPerlabel(int sp, Vec2f& fl, Mat_<float>& localDataC
             int oyUp, oxUp;
             oyUp = (oy + fl[0]) * upScale;
             oxUp = (ox + fl[1]) * upScale;
-            if (oyUp < 0)
-                oyUp = 0;
-            if (oyUp >= upHeight)
-                oyUp = upHeight - 1;
-            if (oxUp < 0)
-                oxUp = 0;
-            if (oxUp >= upWidth)
-                oxUp = upWidth - 1;
+
+            oyUp = std::max(0, oyUp);
+            oyUp = std::min(oyUp, upHeight - 1);
+            oxUp = std::max(0, oxUp);
+            oxUp = std::min(oxUp, upWidth - 1);
+
+            // if (oyUp < 0)
+            //     oyUp = 0;
+            // if (oyUp >= upHeight)
+            //     oyUp = upHeight - 1;
+            // if (oxUp < 0)
+            //     oxUp = 0;
+            // if (oxUp >= upWidth)
+            //     oxUp = upWidth - 1;
 #if USE_POINTER_WISE
             *subRtPtr++ = im2Up[oyUp][oxUp];
 #else
