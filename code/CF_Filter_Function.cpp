@@ -160,19 +160,21 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
     // first iteration
     cv::Mat_<float> crossHorSum(height, width);
     cv::Mat_<int> sizeHorSum(height, width);
-    cv::Mat_<float> crossHorSumTranspose(width, height);
-    cv::Mat_<int> sizeHorSumTranspose(width, height);
-    cv::Mat_<cv::Vec4b> crMapTranspose(width, height);
-    cv::transpose(crMap, crMapTranspose);
+    // cv::Mat_<float> crossHorSumTranspose(width, height);
+    // cv::Mat_<int> sizeHorSumTranspose(width, height);
 
-    float* horSum = new float[width + 1];
+    const cv::Mat_<cv::Vec4b> crMapTranspose = crMap.t();
+    // cv::Mat_<cv::Vec4b> crMapTranspose(width, height);
+    // cv::transpose(crMap, crMapTranspose);
+
+    float* horSum        = new float[width + 1];
     float* rowSizeHorSum = new float[width + 1];
-    float* verSum = new float[height + 1];
-    int* colSizeVerSum = new int[height + 1];
+    float* verSum        = new float[height + 1];
+    int* colSizeVerSum   = new int[height + 1];
 
-    float* costPtr = (float*)(cost.ptr(0));
-    float* crossHorPtr = (float*)(crossHorSum.ptr(0));
-    int* sizeHorPtr = (int*)(sizeHorSum.ptr(0));
+    float* costPtr      = (float*)(cost.ptr(0));
+    float* crossHorPtr  = (float*)(crossHorSum.ptr(0));
+    int* sizeHorPtr     = (int*)(sizeHorSum.ptr(0));
     cv::Vec4b* crMapPtr = (cv::Vec4b*)(crMap.ptr(0));
 
     for (iy = 0; iy < height; ++iy) {
@@ -191,8 +193,12 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
         }
     }
 
-    cv::transpose(crossHorSum, crossHorSumTranspose);
-    cv::transpose(sizeHorSum, sizeHorSumTranspose);
+    cv::Mat_<float> crossHorSumTranspose = crossHorSum.t();
+    cv::Mat_<int> sizeHorSumTranspose = sizeHorSum.t();
+
+    // cv::transpose(crossHorSum, crossHorSumTranspose);
+    // cv::transpose(sizeHorSum, sizeHorSumTranspose);
+
     crossHorPtr = (float*)(crossHorSumTranspose.ptr(0));
     sizeHorPtr = (int*)(sizeHorSumTranspose.ptr(0));
 
@@ -256,6 +262,7 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
             *sizeHorPtr++ = rowSizeHorSum[ix + cross[2] + 1] - rowSizeHorSum[ix - cross[0]];
         }
     }
+
     cv::transpose(crossHorSum, crossHorSumTranspose);
     cv::transpose(sizeHorSum, sizeHorSumTranspose);
     crossHorPtr = (float*)(crossHorSumTranspose.ptr(0));
