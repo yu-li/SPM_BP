@@ -44,7 +44,7 @@ public:
 	vector<set<int> > adjList;
 	int vertexNum;
 	GraphStructure();
-	GraphStructure(int num);
+	explicit GraphStructure(int num);
 	~GraphStructure();
 	void ReserveSpace(int num);
 	void SetVertexNum(int vNum);
