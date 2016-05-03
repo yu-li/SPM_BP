@@ -114,41 +114,49 @@ inline float ComputeMes_PMBP_per_label(const float* dis_belief,
     return min_cost;
 }
 
-inline void Compute_top_k(vector<float>& vec_belief, vector<Vec2f>& vec_label,
-    vector<float>& vec_mes_l, vector<float>& vec_mes_r, vector<float>& vec_mes_u, vector<float>& vec_mes_d,
-    vector<float>& vec_d_cost,
-    Mat_<Vec<float, NUM_TOP_K> >& mes_pixel, Mat_<Vec2f>& label_pixel, Mat_<float>& d_cost, int p, int num_top_k)
+inline void Compute_top_k(
+        vector<float>& vec_belief,
+        vector<Vec2f>& vec_label,
+        vector<float>& vec_mes_l, vector<float>& vec_mes_r, vector<float>& vec_mes_u, vector<float>& vec_mes_d,
+        vector<float>& vec_d_cost,
+        Mat_<Vec<float, NUM_TOP_K> >& mes_pixel,
+        Mat_<Vec2f>& label_pixel,
+        Mat_<float>& d_cost,
+        int p, int num_top_k)
 {
-    int vec_in_size = vec_belief.size();
+    size_t vec_in_size = vec_belief.size();
     for (int i = 0; i < num_top_k; i++) {
         float belief_min = vec_belief[i];
         int id = i;
-        for (int j = i + 1; j < vec_in_size; j++) {
+        for (size_t j = i + 1; j < vec_in_size; j++) {
             if (vec_belief[j] < belief_min) {
                 belief_min = vec_belief[j];
                 id = j;
             }
         }
-        if (vec_mes_l.size())
+
+        if (! vec_mes_l.empty())
             mes_pixel[p][0][i] = vec_mes_l[id];
-        if (vec_mes_r.size())
+        if (! vec_mes_r.empty())
             mes_pixel[p][1][i] = vec_mes_r[id];
-        if (vec_mes_u.size())
+        if (! vec_mes_u.empty())
             mes_pixel[p][2][i] = vec_mes_u[id];
-        if (vec_mes_d.size())
+        if (! vec_mes_d.empty())
             mes_pixel[p][3][i] = vec_mes_d[id];
+
         label_pixel[p][i] = vec_label[id];
         d_cost[p][i] = vec_d_cost[id];
 
         vec_belief[id] = vec_belief[i];
-        if (vec_mes_l.size())
+        if (! vec_mes_l.empty())
             vec_mes_l[id] = vec_mes_l[i];
-        if (vec_mes_r.size())
+        if (! vec_mes_r.empty())
             vec_mes_r[id] = vec_mes_r[i];
-        if (vec_mes_u.size())
+        if (! vec_mes_u.empty())
             vec_mes_u[id] = vec_mes_u[i];
-        if (vec_mes_d.size())
+        if (! vec_mes_d.empty())
             vec_mes_d[id] = vec_mes_d[i];
+
         vec_label[id] = vec_label[i];
         vec_d_cost[id] = vec_d_cost[i];
     }
@@ -897,30 +905,31 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
     Vec3f* subRtPtr = (cv::Vec3f*)(subRt.ptr(0));
     float* rawCostPtr = (float*)(localDataCost.ptr(0));
 
+    cv::Vec3f *im2UpPtr = (cv::Vec3f*) im2Up.ptr(0);
+    int im2UpWidth = im2Up.cols;
+    int maxHeight = upHeight - 1;
+    int maxWidth = upWidth - 1;
+
     int cy, cx, oy, ox;
     oy = y;
     for (cy = 0; cy < h; ++cy, ++oy) {
+        int oyUp = (oy + fl[0]) * upScale;
+        if (oyUp < 0)
+            oyUp = 0;
+        if (oyUp >= upHeight)
+            oyUp = maxHeight;
+
         ox = x;
         for (cx = 0; cx < w; ++cx, ++ox) {
-            int oyUp = (oy + fl[0]) * upScale;
             int oxUp = (ox + fl[1]) * upScale;
-
-            // oyUp = std::max(0, oyUp);
-            // oyUp = std::min(oyUp, upHeight - 1);
-            // oxUp = std::max(0, oxUp);
-            // oxUp = std::min(oxUp, upWidth - 1);
-
-            if (oyUp < 0)
-                oyUp = 0;
-            if (oyUp >= upHeight)
-                oyUp = upHeight - 1;
             if (oxUp < 0)
                 oxUp = 0;
             if (oxUp >= upWidth)
-                oxUp = upWidth - 1;
+                oxUp = maxWidth;
 
 #if USE_POINTER_WISE
-            *subRtPtr++ = im2Up[oyUp][oxUp];
+            // *subRtPtr++ = im2Up[oyUp][oxUp];
+            *subRtPtr++ = im2UpPtr[oyUp * im2UpWidth + oxUp];
 #else
             subRt[cy][cx] = im2Up[oyUp][oxUp];
 #endif
