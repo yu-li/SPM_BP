@@ -358,14 +358,16 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
             //getLocalDataCost(sp, vec_label_nei, DataCost_nei);
 
             Vec4i curRange_s = spRange1[curSPP];
-            int spw = curRange_s[2] - curRange_s[0] + 1;
-            int sph = curRange_s[3] - curRange_s[1] + 1;
-            int spy_s = curRange_s[0];
-            int spy_e = curRange_s[2] + 1;
-            int spx_s = curRange_s[1];
-            int spx_e = curRange_s[3] + 1;
-            int spx_step = 1;
-            int spy_step = 1;
+            // int spw = curRange_s[2] - curRange_s[0] + 1;
+            // int sph = curRange_s[3] - curRange_s[1] + 1;
+
+            int spy_s, spy_e, spx_s, spx_e, spx_step, spy_step;
+            spy_s = curRange_s[0];
+            spy_e = curRange_s[2] + 1;
+            spx_s = curRange_s[1];
+            spx_e = curRange_s[3] + 1;
+            spx_step = 1;
+            spy_step = 1;
 
             if (iter % 4 == 1) {
                 spy_s = curRange_s[2];
@@ -375,8 +377,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
                 spx_step = -1;
                 spy_step = -1;
             }
-
-            if (iter % 4 == 2) {
+            else if (iter % 4 == 2) {
                 spy_s = curRange_s[2];
                 spy_e = curRange_s[0] - 1;
                 spy_step = -1;
@@ -384,8 +385,8 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
                 spx_e = curRange_s[3] + 1;
                 spx_step = 1;
             }
-
-            if (iter % 4 == 3) {
+            else if (iter % 4 == 3) 
+            {
                 spy_s = curRange_s[0];
                 spy_e = curRange_s[2] + 1;
                 spy_step = 1;
@@ -901,9 +902,8 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
     for (cy = 0; cy < h; ++cy, ++oy) {
         ox = x;
         for (cx = 0; cx < w; ++cx, ++ox) {
-            int oyUp, oxUp;
-            oyUp = (oy + fl[0]) * upScale;
-            oxUp = (ox + fl[1]) * upScale;
+            int oyUp = (oy + fl[0]) * upScale;
+            int oxUp = (ox + fl[1]) * upScale;
 
             // oyUp = std::max(0, oyUp);
             // oyUp = std::min(oyUp, upHeight - 1);
@@ -918,6 +918,7 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
                 oxUp = 0;
             if (oxUp >= upWidth)
                 oxUp = upWidth - 1;
+
 #if USE_POINTER_WISE
             *subRtPtr++ = im2Up[oyUp][oxUp];
 #else
@@ -929,32 +930,43 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
 #endif
         }
     }
+
     // calculate raw cost
     subLtPtr = (cv::Vec3f*)(subLt.ptr(0));
     subRtPtr = (cv::Vec3f*)(subRt.ptr(0));
     rawCostPtr = (float*)(localDataCost.ptr(0));
 
+    // int tmpCount;
+    // int dist_c;
     int iy, ix;
     for (iy = 0; iy < h; ++iy) {
         for (ix = 0; ix < w; ++ix) {
 
 #if DATA_COST_ADCENSUS
             bitset<CENSUS_SIZE_OF> tmpBS = subRt_css[iy][ix] ^ subLt_css[iy][ix];
+            // tmpCount = (subRt_css[iy][ix] ^ subLt_css[iy][ix]).count();
+
 #if USE_POINTER_WISE
 
-            float dist_c = cv::norm(*subLtPtr - *subRtPtr, cv::NORM_L1);
+            // float dist_c = int(cv::norm(*subLtPtr, *subRtPtr, cv::NORM_L1) / 3.0);
+            // float dist_c = cv::norm(*subLtPtr, *subRtPtr, cv::NORM_L1);
+            // ++subLtPtr;
+            // ++subRtPtr;
 
-            // float dist_c = fabs((float)(*subLtPtr)[0] - (*subRtPtr)[0])
-            //     + fabs((float)(*subLtPtr)[1] - (*subRtPtr)[1])
-            //     + fabs((float)(*subLtPtr++)[2] - (*subRtPtr++)[2]);
+            float dist_c = fabs((float)(*subLtPtr)[0] - (*subRtPtr)[0])
+                + fabs((float)(*subLtPtr)[1] - (*subRtPtr)[1])
+                + fabs((float)(*subLtPtr++)[2] - (*subRtPtr++)[2]);
 #else
-            float dist_c = cv::norm(*subLt[iy][ix] - *subRt[iy][ix], cv::NORM_L1);
+            float dist_c = cv::norm(*subLt[iy][ix], *subRt[iy][ix], cv::NORM_L1);
             // float dist_c = std::abs(subLt[iy][ix][0] - subRt[iy][ix][0])
             //     + std::abs(subLt[iy][ix][1] - subRt[iy][ix][1])
             //     + std::abs(subLt[iy][ix][2] - subRt[iy][ix][2]);
 #endif
+
             float dist_css = expCensusDiffTable[tmpBS.count()];
             float dist_ce = expColorDiffTable[int(dist_c / 3)];
+            // float dist_css = expCensusDiffTable[tmpCount];
+            // float dist_ce = expColorDiffTable[dist_c];
 
 #if USE_POINTER_WISE
             *rawCostPtr++ = 255 * (dist_css + dist_ce);
@@ -965,9 +977,11 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
 #endif
         }
     }
+
 #if SAVE_DCOST
     label_saved[sp].push_back(fl);
 #endif
+
 }
 
 int spm_bp::createAndOrganizeSuperpixels()
