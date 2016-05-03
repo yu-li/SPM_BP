@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project( spmbpOF )
 
 set (CMAKE_C_FLAGS_RELEASE "-O3")
+# set (CMAKE_BUILD_TYPE RelWithDebInfo)
 set (CMAKE_BUILD_TYPE Release)
 
 FIND_PACKAGE( OpenMP REQUIRED)
