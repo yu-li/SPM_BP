@@ -96,13 +96,15 @@ inline float ComputeMes_PMBP_per_label(const float* dis_belief,
     float min_cost = 1e5;
     for (int k = 0; k < NUM_TOP_K; ++k) {
 #if SMOOTH_COST_TRUNCATED_L1
-        // float cost_tp = dis_belief[k] + wt * min(float(abs(disp_ref[0] - label_k[p][k][0]) + abs(disp_ref[1] - label_k[p][k][1])), tau_s);
-        float cost_tp = dis_belief[k] + wt * min(cv::norm(disp_ref, label_k[p][k], cv::NORM_L1), tau_s);
+        float cost_tp = dis_belief[k] + wt * min(float(abs(disp_ref[0] - label_k[p][k][0]) + abs(disp_ref[1] - label_k[p][k][1])), tau_s);
+        // float cost_tp = dis_belief[k] + wt * min((float)cv::norm(disp_ref, label_k[p][k], cv::NORM_L1),
+                                                 // tau_s);
 #endif
 
 #if SMOOTH_COST_TRUNCATED_L2
-        // float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) + pow(disp_ref[1] - label_k[p][k][1], 2)), tau_s);
-        float cost_tp = dis_belief[k] + wt * min(cv::norm(disp_ref, label_k[p][k], cv::NORM_L2SQR), tau_s);
+        float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) + pow(disp_ref[1] - label_k[p][k][1], 2)), tau_s);
+        // float cost_tp = dis_belief[k] + wt * min((float)cv::norm(disp_ref, label_k[p][k], cv::NORM_L2SQR),
+                                                 // tau_s);
 #endif
         if (cost_tp < min_cost)
             min_cost = cost_tp;
@@ -240,10 +242,15 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
         for (int j = 1; j < width1 - 1; ++j) {
             const Vec3f &ref = im1f[i][j];
             // TODO: Don't need abs here since norm >= 0
-            smoothWt[i][j][0] = omega[int(abs(norm(ref - im1f[i][j - 1])))];
-            smoothWt[i][j][1] = omega[int(abs(norm(ref - im1f[i][j + 1])))];
-            smoothWt[i][j][2] = omega[int(abs(norm(ref - im1f[i - 1][j])))];
-            smoothWt[i][j][3] = omega[int(abs(norm(ref - im1f[i + 1][j])))];
+            // smoothWt[i][j][0] = omega[int(abs(norm(ref - im1f[i][j - 1])))];
+            // smoothWt[i][j][1] = omega[int(abs(norm(ref - im1f[i][j + 1])))];
+            // smoothWt[i][j][2] = omega[int(abs(norm(ref - im1f[i - 1][j])))];
+            // smoothWt[i][j][3] = omega[int(abs(norm(ref - im1f[i + 1][j])))];
+
+            smoothWt[i][j][0] = omega[int(norm(ref - im1f[i][j - 1]))];
+            smoothWt[i][j][1] = omega[int(norm(ref - im1f[i][j + 1]))];
+            smoothWt[i][j][2] = omega[int(norm(ref - im1f[i - 1][j]))];
+            smoothWt[i][j][3] = omega[int(norm(ref - im1f[i + 1][j]))];
         }
     }
 
