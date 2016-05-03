@@ -96,17 +96,12 @@ inline float ComputeMes_PMBP_per_label(const float* dis_belief,
     for (int k = 0; k < NUM_TOP_K; ++k) {
 #if SMOOTH_COST_TRUNCATED_L1
         float cost_tp = dis_belief[k] + wt * min(float(abs(disp_ref[0] - label_k[p][k][0]) + abs(disp_ref[1] - label_k[p][k][1])), tau_s);
-        // float cost_tp = dis_belief[k] + wt * min((float)cv::norm(disp_ref, label_k[p][k], cv::NORM_L1),
-                                                 // tau_s);
 #endif
 
 #if SMOOTH_COST_TRUNCATED_L2
         float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) +
                                                          pow(disp_ref[1] - label_k[p][k][1], 2)),
                                                   tau_s);
-        // float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) + pow(disp_ref[1] - label_k[p][k][1], 2)), tau_s);
-        // float cost_tp = dis_belief[k] + wt * min((float)cv::norm(disp_ref, label_k[p][k], cv::NORM_L2SQR),
-                                                 // tau_s);
 #endif
         if (cost_tp < min_cost)
             min_cost = cost_tp;
@@ -164,6 +159,8 @@ inline void Compute_top_k(
 
 void Message_normalization_PMF_PMBP(Mat_<Vec<float, NUM_TOP_K> >& mes_pixel, int p, int num_top_k)
 {
+    // TODO: Try to parallelize this using reduction?
+    // #pragma omp parallel for
     for (int i = 0; i < 4; i++) {
         float val = 0.0;
 
@@ -247,6 +244,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
     Mat_<Vec4f> smoothWt(height1, width1);
     smoothWt.setTo(lambda_smooth);
 
+// # pragma omp parallel for
     for (int i = 1; i < height1 - 1; ++i)
     {
         for (int j = 1; j < width1 - 1; ++j) {
@@ -340,11 +338,10 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
             }
 
             const int vec_size = vec_label_nei.size();
-            DataCost_nei = Mat_<float>::zeros(h, w * vec_size);
 
             // DataCost_nei.release();
-            // DataCost_nei.create(h, w * vec_size);
-            // DataCost_nei.setTo(0);
+            DataCost_nei.create(h, w * vec_size);
+            DataCost_nei.setTo(0);
 #if USE_CLMF0_TO_AGGREGATE_COST
             cv::Mat_<cv::Vec4b> leftCombinedCrossMap;
             leftCombinedCrossMap.create(h, w);
@@ -353,6 +350,7 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
 #endif
 
 // Compute matching costs for each candidate particles
+            // printf("Computing matching costs start\n");
 #pragma omp parallel for num_threads(NTHREADS)
             for (int i = 0; i < vec_size; ++i) {
                 int kx = i * w;
@@ -364,6 +362,8 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
                 rawCost.copyTo(DataCost_nei(cv::Rect(kx, 0, w, h)));
             }
             //getLocalDataCost(sp, vec_label_nei, DataCost_nei);
+
+            // printf("Computing matching costs end\n");
 
             Vec4i curRange_s = spRange1[curSPP];
             // int spw = curRange_s[2] - curRange_s[0] + 1;
@@ -789,7 +789,6 @@ void spm_bp::getLocalDataCost(int sp, vector<Vec2f>& flowList, Mat_<float>& loca
 
         Vec3f* subLtPtr = (cv::Vec3f*)(subLt.ptr(0));
         Vec3f* subRtPtr = (cv::Vec3f*)(subRt.ptr(0));
-
         float* rawCostPtr = (float*)(rawCost.ptr(0));
 
         int cy, cx, oy, ox;
@@ -911,17 +910,19 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
     int maxWidth = upWidth - 1;
 
     int cy, cx, oy, ox;
-    oy = y;
-    for (cy = 0; cy < h; ++cy, ++oy) {
-        int oyUp = (oy + fl[0]) * upScale;
+    float fl0 = fl[0], fl1 = fl[1];
+#pragma omp parallel for
+    for (cy = 0; cy < h; ++cy) {
+        oy = y + cy;
+        int oyUp = (oy + fl0) * upScale;
         if (oyUp < 0)
             oyUp = 0;
         if (oyUp >= upHeight)
             oyUp = maxHeight;
 
-        ox = x;
-        for (cx = 0; cx < w; ++cx, ++ox) {
-            int oxUp = (ox + fl[1]) * upScale;
+        for (cx = 0; cx < w; ++cx) {
+            ox = x + cx;
+            int oxUp = (ox + fl1) * upScale;
             if (oxUp < 0)
                 oxUp = 0;
             if (oxUp >= upWidth)
@@ -929,7 +930,7 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
 
 #if USE_POINTER_WISE
             // *subRtPtr++ = im2Up[oyUp][oxUp];
-            *subRtPtr++ = im2UpPtr[oyUp * im2UpWidth + oxUp];
+            subRtPtr[cy * w + cx] = im2UpPtr[oyUp * im2UpWidth + oxUp];
 #else
             subRt[cy][cx] = im2Up[oyUp][oxUp];
 #endif
@@ -938,6 +939,7 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
             subRt_css[cy][cx] = censusBS2[oyUp][oxUp];
 #endif
         }
+
     }
 
     // calculate raw cost
