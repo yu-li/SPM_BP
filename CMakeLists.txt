@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 project( spmbpOF )
 
-set (CMAKE_C_FLAGS_RELEASE "-O3")
-# set (CMAKE_BUILD_TYPE RelWithDebInfo)
-set (CMAKE_BUILD_TYPE Release)
+# set (CMAKE_C_FLAGS_RELEASE "-O3")
+set (CMAKE_C_FLAGS_RELEASE "-fno-omit-frame-pointer")
+set (CMAKE_BUILD_TYPE RelWithDebInfo)
+# set (CMAKE_BUILD_TYPE Release)
 
 FIND_PACKAGE( OpenMP REQUIRED)
 if(OPENMP_FOUND)
