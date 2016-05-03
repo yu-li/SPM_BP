@@ -758,7 +758,7 @@ void spm_bp::getLocalDataCost(int sp, vector<Vec2f>& flowList, Mat_<float>& loca
 #endif
 
     cv::Mat_<float> tmpCost(h, w);
-    localDataCost.release();
+    // localDataCost.release();
     localDataCost.create(h, w * dSize);
     int kx;
     for (int kd = 0; kd < dSize; ++kd) {
@@ -882,7 +882,7 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
     int x = subRange1[p1][0];
     int y = subRange1[p1][1];
 
-    localDataCost.release();
+    // localDataCost.release();
     localDataCost.create(h, w);
     //Mat_<float> rawCost(h, w);
     Mat_<Vec3f> subRt(h, w);
@@ -945,9 +945,9 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
 
 #if USE_POINTER_WISE
 
-            float dist_c = fabs((*subLtPtr)[0] - (*subRtPtr)[0])
-                         + fabs((*subLtPtr)[1] - (*subRtPtr)[1])
-                         + fabs((*subLtPtr)[2] - (*subRtPtr)[2]);
+            float dist_c = fabsf((*subLtPtr)[0] - (*subRtPtr)[0])
+                         + fabsf((*subLtPtr)[1] - (*subRtPtr)[1])
+                         + fabsf((*subLtPtr)[2] - (*subRtPtr)[2]);
             ++subLtPtr;
             ++subRtPtr;
 #else
