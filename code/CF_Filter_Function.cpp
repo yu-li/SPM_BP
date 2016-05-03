@@ -151,9 +151,9 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
     //	qx_timer tt;
     //	tt.start();
 
-    int iy, ix, width, height;
-    width = crMap.cols;
-    height = crMap.rows;
+    int iy, ix;
+    int width = crMap.cols;
+    int height = crMap.rows;
 
     cv::Mat_<float> cost = src;
 
@@ -187,7 +187,7 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
         }
 
         for (ix = 0; ix < width; ++ix) {
-            cv::Vec4b cross = *crMapPtr++;
+            const cv::Vec4b &cross = *crMapPtr++;
             *crossHorPtr++ = horSum[ix + cross[2] + 1] - horSum[ix - cross[0]];
             *sizeHorPtr++ = cross[2] + cross[0] + 1;
         }
@@ -210,7 +210,7 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
     int* sizeVerPtr = (int*)(sizeVerSumTranpose.ptr(0));
 
     crMapPtr = (cv::Vec4b*)(crMapTranspose.ptr(0));
-    const int W_FAC = width;
+    // const int W_FAC = width;
     for (ix = 0; ix < width; ++ix) {
         float s = 0.0;
         int cs = 0;
@@ -227,7 +227,7 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
         }
 
         for (iy = 0; iy < height; ++iy) {
-            cv::Vec4b cross = *crMapPtr++;
+            const cv::Vec4b& cross = *crMapPtr++;
             *crossVerPtr++ = verSum[iy + cross[3] + 1] - verSum[iy - cross[1]];
             *sizeVerPtr++ = colSizeVerSum[iy + cross[3] + 1] - colSizeVerSum[iy - cross[1]];
         }
@@ -257,7 +257,7 @@ void CFFilter::FastCLMF0FloatFilterPointer(const cv::Mat_<cv::Vec4b>& crMap, con
         }
 
         for (ix = 0; ix < width; ++ix) {
-            cv::Vec4b cross = *crMapPtr++;
+            const cv::Vec4b &cross = *crMapPtr++;
             *crossHorPtr++ = horSum[ix + cross[2] + 1] - horSum[ix - cross[0]];
             *sizeHorPtr++ = rowSizeHorSum[ix + cross[2] + 1] - rowSizeHorSum[ix - cross[0]];
         }
