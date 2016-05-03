@@ -36,7 +36,7 @@ void opticalFlow::runFlowEstimator(const char* i1file, const char* i2file, const
     flow21.create(height2, width2);
     occMap.create(height1, width1);
 
-#pragma omp parallel for
+// #pragma omp parallel for
     for (int i = 0; i < 2; ++i) {
         if (i == 0)
         //optical flow from frame 1 to frame 2
