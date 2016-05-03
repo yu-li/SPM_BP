@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 project( spmbpOF )
 
-# set (CMAKE_C_FLAGS_RELEASE "-O3")
-set (CMAKE_C_FLAGS_RELEASE "-fno-omit-frame-pointer")
-set (CMAKE_BUILD_TYPE RelWithDebInfo)
-# set (CMAKE_BUILD_TYPE Release)
+set (CMAKE_C_FLAGS_RELEASE "-O3")
+# set (CMAKE_C_FLAGS_RELEASE "-fno-omit-frame-pointer")
+# set (CMAKE_BUILD_TYPE RelWithDebInfo)
+set (CMAKE_BUILD_TYPE Release)
 
 FIND_PACKAGE( OpenMP REQUIRED)
 if(OPENMP_FOUND)
@@ -12,6 +12,8 @@ message("OPENMP Found")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -pg")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS} -pg")
 endif()
 
 find_package (OpenCV REQUIRED)
