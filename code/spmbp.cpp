@@ -34,7 +34,7 @@ void spm_bp::loadPairs(cv::Mat& in1, Mat& in2)
     height1 = im1f.rows;
     width2 = im2f.cols;
     height2 = im2f.rows;
-    srand(time(NULL));
+    // srand(time(NULL));
     // printf("Setting random seed\n");
     // srand(813867);
 }
@@ -87,8 +87,7 @@ inline float ComputeMes_PMBP_per_label(const float* dis_belief,
                                        const Mat_<Vec2f>& label_k,
                                        int p, 
                                        const Vec2f& disp_ref,
-                                       float wt, float tau_s,
-                                       int height1, int width1)
+                                       float wt, float tau_s)
 {
     // int px = p / width1;
     // int py = p % width1;
@@ -102,7 +101,10 @@ inline float ComputeMes_PMBP_per_label(const float* dis_belief,
 #endif
 
 #if SMOOTH_COST_TRUNCATED_L2
-        float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) + pow(disp_ref[1] - label_k[p][k][1], 2)), tau_s);
+        float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) +
+                                                         pow(disp_ref[1] - label_k[p][k][1], 2)),
+                                                  tau_s);
+        // float cost_tp = dis_belief[k] + wt * min((float)(pow(disp_ref[0] - label_k[p][k][0], 2) + pow(disp_ref[1] - label_k[p][k][1], 2)), tau_s);
         // float cost_tp = dis_belief[k] + wt * min((float)cv::norm(disp_ref, label_k[p][k], cv::NORM_L2SQR),
                                                  // tau_s);
 #endif
@@ -432,19 +434,19 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
                         //start_disp = clock();
                         float _mes_l = 0, _mes_r = 0, _mes_u = 0, _mes_d = 0;
                         if (bj != 0) {
-                            _mes_l = ComputeMes_PMBP_per_label(dis_belief_l, label_k, pl, test_label, wt_s[0], tau_s, height1, width1);
+                            _mes_l = ComputeMes_PMBP_per_label(dis_belief_l, label_k, pl, test_label, wt_s[0], tau_s);
                             vec_mes_l.push_back(_mes_l);
                         }
                         if (bj != width1 - 1) {
-                            _mes_r = ComputeMes_PMBP_per_label(dis_belief_r, label_k, pr, test_label, wt_s[1], tau_s, height1, width1);
+                            _mes_r = ComputeMes_PMBP_per_label(dis_belief_r, label_k, pr, test_label, wt_s[1], tau_s);
                             vec_mes_r.push_back(_mes_r);
                         }
                         if (bi != 0) {
-                            _mes_u = ComputeMes_PMBP_per_label(dis_belief_u, label_k, pu, test_label, wt_s[2], tau_s, height1, width1);
+                            _mes_u = ComputeMes_PMBP_per_label(dis_belief_u, label_k, pu, test_label, wt_s[2], tau_s);
                             vec_mes_u.push_back(_mes_u);
                         }
                         if (bi != height1 - 1) {
-                            _mes_d = ComputeMes_PMBP_per_label(dis_belief_d, label_k, pd, test_label, wt_s[3], tau_s, height1, width1);
+                            _mes_d = ComputeMes_PMBP_per_label(dis_belief_d, label_k, pd, test_label, wt_s[3], tau_s);
                             vec_mes_d.push_back(_mes_d);
                         }
                         vec_belief.push_back(_mes_l + _mes_r + _mes_u + _mes_d + dcost);
@@ -465,19 +467,19 @@ void spm_bp::runspm_bp(cv::Mat_<cv::Vec2f>& flowResult)
                             //start_disp = clock();
                             float _mes_l = 0, _mes_r = 0, _mes_u = 0, _mes_d = 0;
                             if (bj != 0) {
-                                _mes_l = ComputeMes_PMBP_per_label(dis_belief_l, label_k, pl, test_label, wt_s[0], tau_s, height1, width1);
+                                _mes_l = ComputeMes_PMBP_per_label(dis_belief_l, label_k, pl, test_label, wt_s[0], tau_s);
                                 vec_mes_l.push_back(_mes_l);
                             }
                             if (bj != width1 - 1) {
-                                _mes_r = ComputeMes_PMBP_per_label(dis_belief_r, label_k, pr, test_label, wt_s[1], tau_s, height1, width1);
+                                _mes_r = ComputeMes_PMBP_per_label(dis_belief_r, label_k, pr, test_label, wt_s[1], tau_s);
                                 vec_mes_r.push_back(_mes_r);
                             }
                             if (bi != 0) {
-                                _mes_u = ComputeMes_PMBP_per_label(dis_belief_u, label_k, pu, test_label, wt_s[2], tau_s, height1, width1);
+                                _mes_u = ComputeMes_PMBP_per_label(dis_belief_u, label_k, pu, test_label, wt_s[2], tau_s);
                                 vec_mes_u.push_back(_mes_u);
                             }
                             if (bi != height1 - 1) {
-                                _mes_d = ComputeMes_PMBP_per_label(dis_belief_d, label_k, pd, test_label, wt_s[3], tau_s, height1, width1);
+                                _mes_d = ComputeMes_PMBP_per_label(dis_belief_d, label_k, pd, test_label, wt_s[3], tau_s);
                                 vec_mes_d.push_back(_mes_d);
                             }
                             vec_belief.push_back(_mes_l + _mes_r + _mes_u + _mes_d + dcost);
@@ -836,9 +838,9 @@ void spm_bp::getLocalDataCost(int sp, vector<Vec2f>& flowList, Mat_<float>& loca
 //cout<<dist_css<<"and               "<<dist_c1<<endl;
 //float dist_css = 1-std::exp( - float(HammingDis_bit(subLt_css_bit[iy][ix],subRt_css_bit[iy][ix]))/miu);
 #if USE_POINTER_WISE
-                *rawCostPtr++ = dist_css * 255 + dist_ce * 255;
+                *rawCostPtr++ = 255 * (dist_css + dist_ce);
 #else
-                rawCost[iy][ix] = dist_css * 255 + dist_ce * 255; //beta*min(dist_c/3,tau_c);//beta*min(dist_c/3,tau_c);//*255 + beta*min(dist_c/3,tau_c);
+                rawCost[iy][ix] = 255 * (dist_css + dist_ce); //beta*min(dist_c/3,tau_c);//beta*min(dist_c/3,tau_c);//*255 + beta*min(dist_c/3,tau_c);
 #endif
 
 #endif
@@ -903,19 +905,19 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
             oyUp = (oy + fl[0]) * upScale;
             oxUp = (ox + fl[1]) * upScale;
 
-            oyUp = std::max(0, oyUp);
-            oyUp = std::min(oyUp, upHeight - 1);
-            oxUp = std::max(0, oxUp);
-            oxUp = std::min(oxUp, upWidth - 1);
+            // oyUp = std::max(0, oyUp);
+            // oyUp = std::min(oyUp, upHeight - 1);
+            // oxUp = std::max(0, oxUp);
+            // oxUp = std::min(oxUp, upWidth - 1);
 
-            // if (oyUp < 0)
-            //     oyUp = 0;
-            // if (oyUp >= upHeight)
-            //     oyUp = upHeight - 1;
-            // if (oxUp < 0)
-            //     oxUp = 0;
-            // if (oxUp >= upWidth)
-            //     oxUp = upWidth - 1;
+            if (oyUp < 0)
+                oyUp = 0;
+            if (oyUp >= upHeight)
+                oyUp = upHeight - 1;
+            if (oxUp < 0)
+                oxUp = 0;
+            if (oxUp >= upWidth)
+                oxUp = upWidth - 1;
 #if USE_POINTER_WISE
             *subRtPtr++ = im2Up[oyUp][oxUp];
 #else
@@ -939,21 +941,25 @@ void spm_bp::getLocalDataCostPerlabel(int sp, const Vec2f& fl, Mat_<float>& loca
 #if DATA_COST_ADCENSUS
             bitset<CENSUS_SIZE_OF> tmpBS = subRt_css[iy][ix] ^ subLt_css[iy][ix];
 #if USE_POINTER_WISE
-            float dist_c = fabs((float)(*subLtPtr)[0] - (*subRtPtr)[0])
-                + fabs((float)(*subLtPtr)[1] - (*subRtPtr)[1])
-                + fabs((float)(*subLtPtr++)[2] - (*subRtPtr++)[2]);
+
+            float dist_c = cv::norm(*subLtPtr - *subRtPtr, cv::NORM_L1);
+
+            // float dist_c = fabs((float)(*subLtPtr)[0] - (*subRtPtr)[0])
+            //     + fabs((float)(*subLtPtr)[1] - (*subRtPtr)[1])
+            //     + fabs((float)(*subLtPtr++)[2] - (*subRtPtr++)[2]);
 #else
-            float dist_c = std::abs(subLt[iy][ix][0] - subRt[iy][ix][0])
-                + std::abs(subLt[iy][ix][1] - subRt[iy][ix][1])
-                + std::abs(subLt[iy][ix][2] - subRt[iy][ix][2]);
+            float dist_c = cv::norm(*subLt[iy][ix] - *subRt[iy][ix], cv::NORM_L1);
+            // float dist_c = std::abs(subLt[iy][ix][0] - subRt[iy][ix][0])
+            //     + std::abs(subLt[iy][ix][1] - subRt[iy][ix][1])
+            //     + std::abs(subLt[iy][ix][2] - subRt[iy][ix][2]);
 #endif
             float dist_css = expCensusDiffTable[tmpBS.count()];
             float dist_ce = expColorDiffTable[int(dist_c / 3)];
 
 #if USE_POINTER_WISE
-            *rawCostPtr++ = dist_css * 255 + dist_ce * 255;
+            *rawCostPtr++ = 255 * (dist_css + dist_ce);
 #else
-            localDataCost[iy][ix] = dist_css * 255 + dist_ce * 255; //beta*min(dist_c/3,tau_c);//beta*min(dist_c/3,tau_c);//*255 + beta*min(dist_c/3,tau_c);
+            localDataCost[iy][ix] = 255 * (dist_css + dist_ce); //beta*min(dist_c/3,tau_c);//beta*min(dist_c/3,tau_c);//*255 + beta*min(dist_c/3,tau_c);
 #endif
 
 #endif
